@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageLibrary", "..\MPR-Mode
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageLibrary.Test", "ImageLibrary.Test\ImageLibrary.Test.csproj", "{26995BC8-419F-4821-9828-EB035B2CAC21}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageLibrary.Test", "tests\ImageLibrary.Test\ImageLibrary.Test.csproj", "{AA900933-1BFB-2757-4A88-729D09C8EE4A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,16 +19,16 @@ Global
 		{6F5076F2-75FC-8931-AA15-CF0E70D181C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6F5076F2-75FC-8931-AA15-CF0E70D181C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6F5076F2-75FC-8931-AA15-CF0E70D181C9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{26995BC8-419F-4821-9828-EB035B2CAC21}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{26995BC8-419F-4821-9828-EB035B2CAC21}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{26995BC8-419F-4821-9828-EB035B2CAC21}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{26995BC8-419F-4821-9828-EB035B2CAC21}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA900933-1BFB-2757-4A88-729D09C8EE4A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA900933-1BFB-2757-4A88-729D09C8EE4A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA900933-1BFB-2757-4A88-729D09C8EE4A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA900933-1BFB-2757-4A88-729D09C8EE4A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{26995BC8-419F-4821-9828-EB035B2CAC21} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{AA900933-1BFB-2757-4A88-729D09C8EE4A} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {848CD50B-11B2-4107-A235-0DC5A390D525}

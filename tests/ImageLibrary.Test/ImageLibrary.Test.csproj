@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\MPR-Model-Dumper\ImageLibrary\ImageLibrary.csproj" />
+    <ProjectReference Include="..\..\..\MPR-Model-Dumper\ImageLibrary\ImageLibrary.csproj" />
   </ItemGroup>
 
   <ItemGroup>
