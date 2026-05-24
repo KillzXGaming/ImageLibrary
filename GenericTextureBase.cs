@@ -475,7 +475,8 @@ namespace ImageLibrary
                 this.ExportDDS(path); 
             else if (path.EndsWith(".astc") && this.ImageFormat.GetEncoder() is Astc astcEncoder)
             {
-                AstcFile astc = new AstcFile(astcEncoder, this.Width, this.Height, this.Depth, this.Data.ToArray());
+                var deswizzled = this.PlatformSwizzle.DeswizzleAllSurfaces(this);
+                AstcFile astc = new AstcFile(astcEncoder, this.Width, this.Height, this.Depth, deswizzled);
                 using (var fs = new FileStream(path, FileMode.Create, FileAccess.Write)) {
                     astc.Save(fs);
                 }
