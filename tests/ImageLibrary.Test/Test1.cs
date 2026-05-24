@@ -105,7 +105,10 @@ namespace ImageLibrary.Test
         }
 
         [TestMethod]
+        [DataRow(ImageFormatDS.NitroTexFormat.Palette4)]
+        [DataRow(ImageFormatDS.NitroTexFormat.Palette16)]
         [DataRow(ImageFormatDS.NitroTexFormat.Palette256)]
+        [DataRow(ImageFormatDS.NitroTexFormat.Direct)]
         public void TestEncodeDS(ImageFormatDS.NitroTexFormat format)
         {
             using var image = Image.Load<Rgba32>(Path.Combine("Resources", "grid.png"));
