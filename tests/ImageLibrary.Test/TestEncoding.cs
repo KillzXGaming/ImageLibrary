@@ -8,7 +8,7 @@ using System.Net;
 namespace ImageLibrary.Test
 {
     [TestClass]
-    public sealed class Test1
+    public sealed class TestEncoding
     {
         const string OUTPUT_FOLDER = "OUTPUT";
 
