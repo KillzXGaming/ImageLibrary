@@ -11,7 +11,6 @@ using ImageLibrary.Interfaces;
 using System.Diagnostics;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 using SixLabors.ImageSharp;
 
 namespace ImageLibrary.Formats.Encoders

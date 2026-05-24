@@ -1,14 +1,16 @@
-﻿using System;
+﻿using ImageLibrary.Formats.Encoders;
+using ImageLibrary.Formats.Encoders.Nitro;
+using ImageLibrary.Helpers;
+using ImageLibrary.Interfaces;
+using ImageLibrary.Utils;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ImageLibrary.Formats.Encoders;
-using ImageLibrary.Formats.Encoders.Gcn;
-using ImageLibrary.Helpers;
-using ImageLibrary.Interfaces;
-using ImageLibrary.Utils;
-using ImageLibrary.PlatformSwizzle.Algorithms.Nitro;
+using static ImageLibrary.ImageFormatGcn;
 
 namespace ImageLibrary
 {
@@ -74,13 +76,33 @@ namespace ImageLibrary
         public virtual byte[] Decode(byte[] data, uint width, uint height)
         {
             // Decode either palette or block based format
-            return NitroTex.DecodeTexture((int)width, (int)height,
+            return NitroTexDecoder.DecodeTexture((int)width, (int)height,
                 this.Format, data, Palette, PaletteIdx, Color0);
         }
 
         public virtual byte[] Encode(byte[] data, uint width, uint height)
         {
-            throw new NotImplementedException();
+            var colorCount = 256;
+            switch (this.Format)
+            {
+                case NitroTexFormat.Palette256: colorCount = 256; break;
+                case NitroTexFormat.Palette16: colorCount = 16; break;
+                case NitroTexFormat.Palette4: colorCount = 4; break;
+                case NitroTexFormat.A3I5: colorCount = 32; break;
+                case NitroTexFormat.A5I3: colorCount = 8; break;
+            }
+
+            var palFormat = MedianCut.PaletteFormat.BGR555;
+            var img = MedianCut.Quantize(Image.LoadPixelData<Rgba32>(data, (int)width, (int)height),
+                colorCount, palFormat, null);
+
+            var quantData = img.GetSourceInBytes();
+            img.Dispose();
+
+            var output = NitroTexEncoder.Encode(this.Format, quantData, (int)width, (int)height, Color0);
+            Palette = output.palette;
+            PaletteIdx = output.paletteIdx;
+            return output.texData;
         }
 
         public virtual uint GetSize(uint width, uint height) => 0;

@@ -43,6 +43,8 @@ namespace ImageLibrary.Formats.Encoders.Nitro
 
         public static ushort GetUshort(this byte[] data, int startIndex, bool bigEndian)
         {
+            if (startIndex >= data.Length) return 0;
+
             return BitConverter.ToUInt16(data, startIndex);
         }
     }

@@ -16,6 +16,7 @@ internal class MedianCut : IDisposable
         RGB565,
         RGB5A3,
         IA8,
+        BGR555, // DS
     }
 
     private Image<Rgba32> _srcImage;
@@ -35,6 +36,21 @@ internal class MedianCut : IDisposable
     private const int A_SCALE = 28;
 
     #region Handlers/Converters
+
+    private static ushort ToBGR555(Rgba32 p)
+    {
+        return (ushort)(((p.B >> 3) << 10) | ((p.G >> 3) << 5) | (p.R >> 3));
+    }
+
+    private static Rgba32 FromBGR555(ushort id)
+    {
+        byte r = (byte)(((id & 0x1F) * 255) / 31);
+        byte g = (byte)(((id >> 5) & 0x1F) * 255 / 31);
+        byte b = (byte)(((id >> 10) & 0x1F) * 255 / 31);
+        return new Rgba32(r, g, b, 255);
+    }
+
+    private static ushort ToBGR555_A(Rgba32 p) => ToBGR555(p);
 
     private static ushort ToIA8(Rgba32 p)
     {
@@ -97,20 +113,26 @@ internal class MedianCut : IDisposable
 
     private MedianCut(Image<Rgba32> image, PaletteFormat palFormat)
     {
-        if (palFormat == PaletteFormat.IA8)
+        switch (palFormat)
         {
-            _idFunc = ToIA8;
-            _idConv = FromIA8;
-        }
-        else if (palFormat == PaletteFormat.RGB565)
-        {
-            _idFunc = ToRGB565;
-            _idConv = FromRGB565;
-        }
-        else
-        {
-            _idFunc = ToRGB5A3;
-            _idConv = FromRGB5A3;
+            case PaletteFormat.IA8:
+                _idFunc = ToIA8;
+                _idConv = FromIA8;
+                break;
+            case PaletteFormat.RGB565:
+                _idFunc = ToRGB565;
+                _idConv = FromRGB565;
+                break;
+            case PaletteFormat.RGB5A3:
+                _idFunc = ToRGB5A3;
+                _idConv = FromRGB5A3;
+                break;
+            case PaletteFormat.BGR555:
+                _idFunc = ToBGR555;
+                _idConv = FromBGR555;
+                break;
+            default:
+                throw new ArgumentException("Unsupported palette format");
         }
 
         _srcImage = image;

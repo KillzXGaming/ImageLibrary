@@ -98,6 +98,7 @@ namespace ImageLibrary
 
             var img = MedianCut.Quantize(Image.LoadPixelData<Rgba32>(data, (int)width, (int)height),
                 colorCount, palFormat, null);
+
             var quantData = img.GetSourceInBytes();
             img.Dispose();
 
@@ -132,7 +133,6 @@ namespace ImageLibrary
             { GcnTextureFormats.C8, ImageDataPaletteFormat.C8 },
             { GcnTextureFormats.C14X2, ImageDataPaletteFormat.C14X2 },
         };
-
 
         public static List<IImageFormat> GetSupportedFormats()
         {
