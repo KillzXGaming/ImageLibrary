@@ -103,5 +103,18 @@ namespace ImageLibrary.Test
             textureBase.Import(image);
             textureBase.Export(Path.Combine(OUTPUT_FOLDER, $"CTR_{format}.png"));
         }
+
+        [TestMethod]
+        [DataRow(ImageFormatDS.NitroTexFormat.Palette256)]
+        public void TestEncodeDS(ImageFormatDS.NitroTexFormat format)
+        {
+            using var image = Image.Load<Rgba32>(Path.Combine("Resources", "grid.png"));
+            Directory.CreateDirectory(OUTPUT_FOLDER);
+
+            GenericTextureBase textureBase = new();
+            textureBase.ImageFormat = new ImageFormatDS(format);
+            textureBase.Import(image);
+            textureBase.Export(Path.Combine(OUTPUT_FOLDER, $"NITRO_{format}.png"));
+        }
     }
 }
