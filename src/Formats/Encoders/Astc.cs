@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -60,6 +61,10 @@ namespace ImageLibrary.Formats.Encoders
 
         public byte[] Decode(byte[] data, uint width, uint height)
         {
+            if (!IsAstcEncValid())
+                return ASTCDecoder.DecodeToRGBA8888(data,
+                  (int)BlockWidth, (int)BlockHeight, (int)BlockDepth, (int)width, (int)height, 1);
+
             AstcencSwizzle swizzle = new AstcencSwizzle()
             {
                 r = AstcencSwz.AstcencSwzR,
@@ -123,6 +128,42 @@ namespace ImageLibrary.Formats.Encoders
             Astcenc.AstcencContextFree(context);
 
             return comp_data;
+        }
+
+        // Checks for valid dll paths to use astc enc
+        static bool IsAstcEncValid()
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                string dir_x64 = Path.Combine("runtimes", "win-x64", "native");
+                string dir_arm = Path.Combine("runtimes", "win-arm64", "native");
+
+                return RuntimeInformation.ProcessArchitecture switch
+                {
+                    Architecture.X64 => File.Exists(Path.Combine(dir_x64, "astcenc-avx2-shared.dll")),
+                    Architecture.Arm64 => File.Exists(Path.Combine(dir_arm, "astcenc-neon-shared.dll")),
+                    _ => false,
+                };
+            }
+            if (OperatingSystem.IsLinux())
+            {
+                string dir_x64 = Path.Combine("runtimes", "linux-x64", "native");
+                string dir_arm = Path.Combine("runtimes", "linux-x64", "native");
+
+                return RuntimeInformation.ProcessArchitecture switch
+                {
+                    Architecture.X64 => File.Exists(Path.Combine(dir_x64, "libastcenc-avx2-shared.so")),
+                    Architecture.Arm64 => File.Exists(Path.Combine(dir_arm, "libastcenc-neon-shared.so")),
+                    _ => throw new PlatformNotSupportedException(),
+                };
+            }
+            if (OperatingSystem.IsMacOS())
+            {
+                string dir = Path.Combine("runtimes", "osx", "native");
+                return File.Exists(Path.Combine(dir, "libastcenc-shared.dylib"));
+            }
+
+            return false;
         }
 
         public enum AstcFormat
