@@ -12,7 +12,7 @@ namespace ImageLibrary.Test
     {
         const string OUTPUT_FOLDER = "OUTPUT";
 
-        static string IMG_FILE => Path.Combine("Resources", "Link_eye.0.png");
+        static string IMG_FILE => Path.Combine("Resources", "grid.png");
 
         [TestMethod]
         public void TestMethod1()
