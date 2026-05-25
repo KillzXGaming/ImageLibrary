@@ -13,23 +13,24 @@
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
   </ItemGroup>
 
-	<PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
-		<DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(OS)' == 'Unix'">
-		<DefineConstants>$(DefineConstants);LINUX</DefineConstants>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64' OR '$(RuntimeIdentifier)' == 'osx-arm64'">
-		<DefineConstants>$(DefineConstants);MACOS</DefineConstants>
-	</PropertyGroup>
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+	    <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+    </PropertyGroup>
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+	    <DefineConstants>$(DefineConstants);LINUX</DefineConstants>
+    </PropertyGroup>
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+	    <DefineConstants>$(DefineConstants);OSX</DefineConstants>
+    </PropertyGroup>
 	
   <ItemGroup>
     <None Update="image_dds.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="libRG_ETC1.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="libtegra_swizzle.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="RG_ETC1.dll">

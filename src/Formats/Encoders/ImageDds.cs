@@ -12,7 +12,7 @@ namespace ImageLibrary.Formats.Encoders
     {
         public static bool IsSupported()
         {
-            return true;
+            return RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         }
 
         public static unsafe byte[] Decode(byte[] input, uint width, uint height, ImageFormat format)
