@@ -96,14 +96,13 @@ namespace ImageLibrary.Formats.Encoders.Gcn
             //Now look them up in the palette and turn them into actual colors.
             byte[] finalDest = new byte[decodedData.Length / 2];
 
-            int pixelSize = paletteFormat == GcnPaletteFormats.IA8 ? 2 : 4;
             int destOffset = 0;
             for (int y = 0; y < height; y++)
             {
                 for (int x = 0; x < width; x++)
                 {
                     UnpackPixelFromPalette(decodedData[y * width + x], ref finalDest, destOffset, imagePalette.GetBytes(), paletteFormat);
-                    destOffset += pixelSize;
+                    destOffset += 4;
                 }
             }
 
@@ -146,14 +145,13 @@ namespace ImageLibrary.Formats.Encoders.Gcn
             //Now look them up in the palette and turn them into actual colors.
             byte[] finalDest = new byte[decodedData.Length / 2];
 
-            int pixelSize = paletteFormat == GcnPaletteFormats.IA8 ? 2 : 4;
             int destOffset = 0;
             for (int y = 0; y < height; y++)
             {
                 for (int x = 0; x < width; x++)
                 {
                     UnpackPixelFromPalette(decodedData[y * width + x], ref finalDest, destOffset, imagePalette.GetBytes(), paletteFormat);
-                    destOffset += pixelSize;
+                    destOffset += 4;
                 }
             }
 
@@ -349,8 +347,12 @@ namespace ImageLibrary.Formats.Encoders.Gcn
             switch (format)
             {
                 case GcnPaletteFormats.IA8:
-                    dest[0] = paletteData[2 * paletteIndex + 1];
-                    dest[1] = paletteData[2 * paletteIndex + 0];
+                    byte gray = paletteData[2 * paletteIndex + 0];
+                    byte alpha = paletteData[2 * paletteIndex + 1];
+                    dest[offset + 0] = gray; 
+                    dest[offset + 1] = gray;
+                    dest[offset + 2] = gray;
+                    dest[offset + 3] = alpha;
                     break;
                 case GcnPaletteFormats.RGB565:
                     {
