@@ -27,28 +27,11 @@ namespace ImageLibrary.Formats.Encoders.Nitro
                     return Encode_A3I5(rgba, width, height);
                 case ImageFormatDS.NitroTexFormat.A5I3:
                     return Encode_A5I3(rgba, width, height);
-              //  case ImageFormatDS.NitroTexFormat.CMPR_4x4:
-              //      return Encode_CMPR_4x4(rgba, width, height);
+                case ImageFormatDS.NitroTexFormat.CMPR_4x4:
+                    return NitroCMPR_4x4.Encode(rgba, width, height);
                 default:
                     throw new NotSupportedException($"{format} not supported for encoding!");
             }
-        }
-
-        public static (byte[] texData, byte[] palette, byte[] paletteIdx) Encode_CMPR_4x4(byte[] rgba, int width, int height)
-        {
-            if (width % 4 != 0 || height % 4 != 0)
-                throw new ArgumentException("CMPR_4x4 requires width and height to be multiples of 4");
-
-            int numBlocksX = width / 4;
-            int numBlocksY = height / 4;
-            int totalBlocks = numBlocksX * numBlocksY;
-
-            byte[] output = new byte[totalBlocks * 4]; // 4 bytes indices per block
-            byte[] paletteIdx = new byte[totalBlocks * 2]; // 2 bytes per block (palette info)
-
-            // TODO this one is more advanced
-
-            return (output, new byte[0], paletteIdx);
         }
 
         public static (byte[] texData, byte[] palette, byte[] paletteIdx) Encode_Direct(byte[] rgba, int width, int height)
@@ -177,7 +160,7 @@ namespace ImageLibrary.Formats.Encoders.Nitro
             return (texData, rawPalette, new byte[0]);
         }
 
-        private static (byte[] indices, byte[] rawPalette) BuildPaletteAndIndices(
+        internal static (byte[] indices, byte[] rawPalette) BuildPaletteAndIndices(
                 byte[] rgbaData, int maxColors, bool color0Transparent)
         {
             List<Color32> uniqueColors = new List<Color32>();
@@ -227,15 +210,22 @@ namespace ImageLibrary.Formats.Encoders.Nitro
             return (indices, palette);
         }
 
-        static ushort RgbaToBgr555(byte r, byte g, byte b)
+        internal static ushort RgbaToBgr555(byte r, byte g, byte b)
         {
-            return (ushort)(((b >> 3) << 10) | ((g >> 3) << 5) | (r >> 3));
+            return (ushort)(((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3));
         }
 
-        static void SetUshort(byte[] arr, int offset, ushort value)
+        internal static void SetUshort(byte[] arr, int offset, ushort value)
         {
             arr[offset] = (byte)value;
             arr[offset + 1] = (byte)(value >> 8);
+        }
+        internal static void SetUint(byte[] arr, int offset, uint value)
+        {
+            arr[offset] = (byte)(value >> 24);
+            arr[offset + 1] = (byte)(value >> 16);
+            arr[offset + 2] = (byte)(value >> 8);
+            arr[offset + 3] = (byte)value;
         }
     }
 }
