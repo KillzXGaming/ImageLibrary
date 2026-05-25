@@ -41,6 +41,33 @@ namespace ImageLibrary.Test
         }
 
         [TestMethod]
+        [DataRow(TextureFormat.ASTC_4x4_UNORM)]
+        [DataRow(TextureFormat.ASTC_5x4_UNORM)]
+        [DataRow(TextureFormat.ASTC_5x5_UNORM)]
+        [DataRow(TextureFormat.ASTC_6x5_UNORM)]
+        [DataRow(TextureFormat.ASTC_6x6_UNORM)]
+        [DataRow(TextureFormat.ASTC_8x5_UNORM)]
+        [DataRow(TextureFormat.ASTC_8x6_UNORM)]
+        [DataRow(TextureFormat.ASTC_8x8_UNORM)]
+        [DataRow(TextureFormat.ASTC_10x5_UNORM)]
+        [DataRow(TextureFormat.ASTC_10x6_UNORM)]
+        [DataRow(TextureFormat.ASTC_10x8_UNORM)]
+        [DataRow(TextureFormat.ASTC_10x10_UNORM)]
+        [DataRow(TextureFormat.ASTC_12x10_UNORM)]
+        [DataRow(TextureFormat.ASTC_12x12_UNORM)]
+        public void TestEncodeASTC(TextureFormat format)
+        {
+            using var image = Image.Load<Rgba32>(IMG_FILE);
+
+            Directory.CreateDirectory(OUTPUT_FOLDER);
+
+            GenericTextureBase textureBase = new();
+            textureBase.ImageFormat = new ImageFormat(format);
+            textureBase.Import(image);
+            textureBase.Export(Path.Combine(OUTPUT_FOLDER, $"TEST_{format}.png"));
+        }
+
+        [TestMethod]
         [DataRow(ImageFormatGcn.GcnTextureFormats.CMPR)]
         [DataRow(ImageFormatGcn.GcnTextureFormats.IA4)]
         [DataRow(ImageFormatGcn.GcnTextureFormats.IA8)]

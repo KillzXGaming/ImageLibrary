@@ -1,17 +1,19 @@
-﻿using ImageLibrary.Native;
-using BCnEncoder.Shared;
+﻿using BCnEncoder.Shared;
+using ImageLibrary.Helpers;
+using ImageLibrary.Interfaces;
+using ImageLibrary.Native;
+using PVRTexLib;
+using Ryujinx.Graphics.Gal.Texture;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Ryujinx.Graphics.Gal.Texture;
-using ImageLibrary.Interfaces;
-using System.Diagnostics;
-using SixLabors.ImageSharp.Formats.Png;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp;
 
 namespace ImageLibrary.Formats.Encoders
 {
@@ -58,134 +60,31 @@ namespace ImageLibrary.Formats.Encoders
 
         public byte[] Decode(byte[] data, uint width, uint height)
         {
-            if (File.Exists(astcencPath))
-                return DecodeAstcenc(data, width, height);
+            PVRTexture texture = PvrTextureHelper.CreateTexture(data, (PVRTexLibPixelFormat)Format, width, height)
+                     ?? throw new InvalidOperationException("Failed to create astc texture with PVRTexLib.");
 
-            return ASTCDecoder.DecodeToRGBA8888(data, (int)BlockWidth, (int)BlockHeight, 1, (int)width, (int)height, 1);
-
-            //Init the texture instance
-            var pvrTexture = PvrTexture.Create(data, width, height, 1,
-                (PixelFormat)Format, ChannelType.UnsignedByte, ColorSpace.Linear);
-
-            var successful = pvrTexture.Transcode(PixelFormat.RGBA8888, ChannelType.UnsignedByteNorm, ColorSpace.Linear, CompressionQuality.PVRTCHigh);
+            bool successful = texture.Transcode(PvrTextureHelper.Rgba8888, 
+                PVRTexLibVariableType.UnsignedByteNorm, 
+                PVRTexLibColourSpace.Linear,
+                PVRTexLibCompressorQuality.PVRTCHigh);
             if (!successful)
-                throw new InvalidOperationException($"Failed to transcode with PVRTexLib for format {Format}.");
+                throw new InvalidOperationException("Transcoding with PVRTexLib was not successful.");
 
-            return pvrTexture.GetData();
+            return PvrTextureHelper.GetData(texture);
         }
 
         public byte[] Encode(byte[] data, uint width, uint height)
         {
-            return EncodeToAstc(data, width, height, $"{BlockWidth}x{BlockHeight}", "fast");
+            PVRTexture texture = PvrTextureHelper.CreateTexture(data, PvrTextureHelper.Rgba8888, width, height)
+                     ?? throw new InvalidOperationException("Failed to create astc texture with PVRTexLib.");
 
-            //Init the texture instance
-            var pvrTexture = PvrTexture.Create(data,
-                width, height, 1, PixelFormat.RGBA8888, ChannelType.UnsignedByteNorm, ColorSpace.Linear);
+            texture.Transcode((ulong)Format,
+                PVRTexLibVariableType.UnsignedByteNorm,
+                PVRTexLibColourSpace.Linear,
+                PVRTexLibCompressorQuality.PVRTCHigh);
 
-            pvrTexture.Transcode((PixelFormat)Format, ChannelType.UnsignedByteNorm, ColorSpace.Linear, CompressionQuality.PVRTCHigh);
-            return pvrTexture.GetData();
+            return PvrTextureHelper.GetData(texture);
         }
-
-        static string astcencPath = "astcenc.exe";
-
-        byte[] DecodeAstcenc(byte[] data, uint width, uint height)
-        {
-            string tempAstc = Path.GetTempFileName() + ".astc";
-            string tempOutput = Path.GetTempFileName() + ".tga"; // astcenc supports TGA output
-            string tempPng = Path.GetTempFileName() + ".png";
-
-            try
-            {
-                AstcFile astc = new AstcFile(this, width, height, 1, data);
-                astc.Save(tempAstc);
-
-                // Example: 6x6 block size
-                string blockSize = $"{BlockWidth}x{BlockHeight}";
-
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = astcencPath,
-                    Arguments = $"-dl  \"{tempAstc}\" \"{tempOutput}\"",
-                    CreateNoWindow = true,
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                };
-
-
-                using var process = Process.Start(startInfo);
-
-                string stdout = process.StandardOutput.ReadToEnd();
-                string stderr = process.StandardError.ReadToEnd();
-
-                process.WaitForExit();
-
-                if (!File.Exists(tempOutput))
-                    throw new FileNotFoundException("Decoded ASTC image not found");
-
-                using var image = Image.Load<Rgba32>(tempOutput);
-                var raw = image.GetSourceInBytes();
-                image.Dispose();
-
-                return raw;
-            }
-            finally
-            {
-                // Clean up
-                if (File.Exists(tempAstc)) File.Delete(tempAstc);
-                if (File.Exists(tempOutput)) File.Delete(tempOutput);
-            }
-        }
-
-        public byte[] EncodeToAstc(byte[] rgba, uint width, uint height, string blockSize = "6x6", string quality = "fast")
-        {
-            string tempInput = Path.GetTempFileName() + ".png";
-            string tempOutput = Path.GetTempFileName() + ".astc";
-
-            try
-            {
-                // Save input PNG to disk
-                var img = Image.LoadPixelData<Rgba32>(rgba, (int)width, (int)height);
-                img.SaveAsPng(tempInput);
-                img.Dispose();
-
-                // Build arguments for astcenc CLI
-                string args = $"-cl \"{tempInput}\" \"{tempOutput}\" {blockSize} -{quality}";
-
-                var processInfo = new ProcessStartInfo
-                {
-                    FileName = astcencPath,
-                    Arguments = args,
-                    CreateNoWindow = true,
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                };
-
-                using var process = Process.Start(processInfo);
-
-                string stdout = process.StandardOutput.ReadToEnd();
-                string stderr = process.StandardError.ReadToEnd();
-
-                process.WaitForExit();
-
-                Console.WriteLine(stdout);
-                Console.WriteLine(stderr);
-
-                if (!File.Exists(tempOutput))
-                    throw new FileNotFoundException("ASTC encoding failed");
-
-                AstcFile astc = new AstcFile(tempOutput);
-                return astc.DataBlock;
-            }
-            finally
-            {
-                // Clean up temp files
-                if (File.Exists(tempInput)) File.Delete(tempInput);
-                if (File.Exists(tempOutput)) File.Delete(tempOutput);
-            }
-        }
-
 
         public enum AstcFormat
         {
