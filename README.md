@@ -4,7 +4,9 @@ WIP image processing library. Codebase likely to make changes during development
 ## Libraries used
 - [tegra_swizzle](https://github.com/KillzXGaming/tegra_swizzle) [MIT license](https://github.com/ScanMountGoat/tegra_swizzle/blob/main/LICENSE)
 - [ImageSharp](https://github.com/SixLabors/ImageSharp)
+- [image_ddsT](https://github.com/ScanMountGoat/image_dds) [MIT license](https://github.com/ScanMountGoat/image_dds/blob/main/LICENSE)
 - [BCnEncoder.Net](https://github.com/Nominom/BCnEncoder.NET)
+- [PVRTexLib used for ASTC](https://github.com/YingFengTingYu/PVRTexLib.NET)
 
 ## Usage
 
