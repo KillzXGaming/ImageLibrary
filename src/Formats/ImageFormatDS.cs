@@ -91,14 +91,18 @@ namespace ImageLibrary
                 case NitroTexFormat.A5I3: colorCount = 8; break;
             }
 
-            var palFormat = MedianCut.PaletteFormat.BGR555;
-            var img = MedianCut.Quantize(Image.LoadPixelData<Rgba32>(data, (int)width, (int)height),
-                colorCount, palFormat, null);
+            if (this.Format != NitroTexFormat.Direct && this.Format != NitroTexFormat.CMPR_4x4)
+            {
+                var hasAlpha = this.Format == NitroTexFormat.A3I5 || this.Format == NitroTexFormat.A5I3;
+                var palFormat = MedianCut.PaletteFormat.BGR555;
+                var img = MedianCut.Quantize(Image.LoadPixelData<Rgba32>(data, (int)width, (int)height),
+                    colorCount, palFormat, hasAlpha, null);
 
-            var quantData = img.GetSourceInBytes();
-            img.Dispose();
+                data = img.GetSourceInBytes();
+                img.Dispose();
+            }
 
-            var output = NitroTexEncoder.Encode(this.Format, quantData, (int)width, (int)height, Color0);
+            var output = NitroTexEncoder.Encode(this.Format, data, (int)width, (int)height, Color0);
             Palette = output.palette;
             PaletteIdx = output.paletteIdx;
             return output.texData;

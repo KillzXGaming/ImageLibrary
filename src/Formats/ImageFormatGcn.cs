@@ -100,7 +100,7 @@ namespace ImageLibrary
                 palFormat = MedianCut.PaletteFormat.RGB565;
 
             var img = MedianCut.Quantize(Image.LoadPixelData<Rgba32>(data, (int)width, (int)height),
-                colorCount, palFormat, null);
+                colorCount, palFormat, false, null);
 
             var quantData = img.GetSourceInBytes();
             img.Dispose();

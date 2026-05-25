@@ -11,6 +11,8 @@ interface IProgressTracker
 // From https://github.com/soopercool101/BrawlCrate/blob/8fd21ef7ea4c10073fea83b9236517b6c3cb45c3/BrawlLib/Imaging/MedianCut.cs#L10
 internal class MedianCut : IDisposable
 {
+    public bool KeepAlpha = false;
+
     public enum PaletteFormat
     {
         RGB565,
@@ -176,6 +178,10 @@ internal class MedianCut : IDisposable
                             Weight = 1,
                             Box = initialBox
                         };
+                        // Some palette types store alpha seperate
+                        if (KeepAlpha)
+                            entryRef.Color.A = pixel.A;
+
                         initialBox.Entries.Add(entryRef);
                     }
                     else
@@ -229,7 +235,15 @@ internal class MedianCut : IDisposable
             ColorBox box = colorList[i];
             box.Index = i;
             ushort id = _idFunc(box.Color);
-            box.Color = _idConv(id);
+            if (KeepAlpha)
+            {
+                var conv = _idConv(id);
+                box.Color.R = conv.R;
+                box.Color.G = conv.G;
+                box.Color.B = conv.B;
+            }
+            else
+                box.Color = _idConv(id);
         }
     }
 
@@ -260,8 +274,9 @@ internal class MedianCut : IDisposable
         _boxCount = count;
     }
 
-    private Image<Rgba32> Quantize(int targetColors, IProgressTracker progress)
+    private Image<Rgba32> Quantize(int targetColors, bool keepAlpha, IProgressTracker progress)
     {
+        this.KeepAlpha = keepAlpha;
         Array.Fill(_groupTable, null);
 
         if (!SelectColors(targetColors))
@@ -305,12 +320,12 @@ internal class MedianCut : IDisposable
         return bmp;
     }
 
-    public static Image<Rgba32> Quantize(Image<Rgba32> bmp, int colors, PaletteFormat palFormat,
+    public static Image<Rgba32> Quantize(Image<Rgba32> bmp, int colors, PaletteFormat palFormat, bool keepAlpha,
                                           IProgressTracker progress)
     {
         using (MedianCut mc = new MedianCut(bmp, palFormat))
         {
-            return mc.Quantize(colors, progress);
+            return mc.Quantize(colors, keepAlpha, progress);
         }
     }
 

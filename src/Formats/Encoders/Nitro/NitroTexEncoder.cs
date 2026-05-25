@@ -2,6 +2,7 @@
 using ImageLibrary.Formats.Encoders.Gcn;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -41,13 +42,14 @@ namespace ImageLibrary.Formats.Encoders.Nitro
 
             for (int i = 0; i < rgba.Length; i += 4)
             {
+                byte a = rgba[i + 3];
                 byte r = rgba[i + 2];
                 byte g = rgba[i + 1];
                 byte b = rgba[i + 0];
 
-                ushort bgr555 = RgbaToBgr555(r, g, b);
+                ushort bgr5551 = RgbaToBgr5551(r, g, b, a);
 
-                SetUshort(output, dstOffset, bgr555); 
+                SetUshort(output, dstOffset, bgr5551); 
                 dstOffset += 2;
             }
 
@@ -185,7 +187,7 @@ namespace ImageLibrary.Formats.Encoders.Nitro
             for (int i = 0; i < uniqueColors.Count; i++)
             {
                 var c = uniqueColors[i];
-                ushort bgr555 = RgbaToBgr555(c.R, c.G, c.B);
+                ushort bgr555 = RgbaToBgr5551(c.R, c.G, c.B);
 
                 if (color0Transparent && i == 0)
                     bgr555 = 0; // transparent black
@@ -210,9 +212,14 @@ namespace ImageLibrary.Formats.Encoders.Nitro
             return (indices, palette);
         }
 
-        internal static ushort RgbaToBgr555(byte r, byte g, byte b)
+        internal static ushort RgbaToBgr5551(byte r, byte g, byte b, byte a = 255)
         {
-            return (ushort)(((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3));
+            ushort alpha = (ushort)(a >= 128 ? 1 : 0);
+            return (ushort)(
+                (alpha << 15) |
+                ((r >> 3) << 10) |
+                ((g >> 3) << 5) |
+                (b >> 3));
         }
 
         internal static void SetUshort(byte[] arr, int offset, ushort value)
