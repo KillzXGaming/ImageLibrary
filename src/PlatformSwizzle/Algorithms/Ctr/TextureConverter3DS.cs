@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using ImageLibrary.PlatformSwizzle.Algorithms.Ctr;
+using ImageLibrary.Formats.Encoders.Ctr;
 
 namespace FontLibrary.Textures
 {
@@ -307,9 +308,9 @@ namespace FontLibrary.Textures
             int OOffs = 0;
 
             if (Format == PICATextureFormat.ETC1)
-                return ETC1_Encode(Input, Img.Width, Img.Height, Format);  
+                return RG_ETC1.encodeETC(Img);  
             else if (Format == PICATextureFormat.ETC1A4)
-                return ETC1_Encode(Input, Img.Width, Img.Height, Format);
+                return RG_ETC1.encodeETCa4(Img);
             else
             {
                 var mem = new System.IO.MemoryStream();
@@ -495,6 +496,7 @@ namespace FontLibrary.Textures
 
         public static byte[] ETC1_Encode(byte[] Data, int Width, int Height, PICATextureFormat format)
         {
+
             byte[] Out_Data = null;
 
             // Os tiles com compressão ETC1 no 3DS estão embaralhados

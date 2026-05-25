@@ -1,0 +1,13 @@
+Windows:
+
+g++ -shared -O3 -static -static-libgcc -static-libstdc++ \
+    -o RG_ETC1.dll rg_etc1.cpp -DRG_ETC1_EXPORTS
+	
+Linux:
+
+g++ -shared -fPIC -O3 -static-libgcc -static-libstdc++ \
+    -o RG_ETC1.so rg_etc1.cpp -DRG_ETC1_EXPORTS
+
+Mac:
+g++ -dynamiclib -fPIC -O3 -dead_strip -o RG_ETC1.dylib rg_etc1.cpp -DRG_ETC1_EXPORTS
+

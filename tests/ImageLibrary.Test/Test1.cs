@@ -8,9 +8,11 @@ using System.Net;
 namespace ImageLibrary.Test
 {
     [TestClass]
-    public sealed class TestEncoding
+    public sealed class Test1
     {
         const string OUTPUT_FOLDER = "OUTPUT";
+
+        static string IMG_FILE => Path.Combine("Resources", "Link_eye.0.png");
 
         [TestMethod]
         public void TestMethod1()
@@ -28,7 +30,7 @@ namespace ImageLibrary.Test
         [DataRow(DDS.DXGI_FORMAT.DXGI_FORMAT_BC7_UNORM)]
         public void TestEncodeBCN(DDS.DXGI_FORMAT format)
         {
-            using var image = Image.Load<Rgba32>(Path.Combine("Resources", "grid.png"));
+            using var image = Image.Load<Rgba32>(IMG_FILE);
 
             Directory.CreateDirectory(OUTPUT_FOLDER);
 
@@ -49,7 +51,7 @@ namespace ImageLibrary.Test
         [DataRow(ImageFormatGcn.GcnTextureFormats.RGB5A3)]
         public void TestEncodeGCN(ImageFormatGcn.GcnTextureFormats format)
         {
-            using var image = Image.Load<Rgba32>(Path.Combine("Resources", "grid.png"));
+            using var image = Image.Load<Rgba32>(IMG_FILE);
             Directory.CreateDirectory(OUTPUT_FOLDER);
 
             GenericTextureBase textureBase = new();
@@ -69,7 +71,7 @@ namespace ImageLibrary.Test
             ImageFormatGcn.GcnTextureFormats format, 
             ImageFormatGcn.GcnPaletteFormats paletteFormat)
         {
-            using var image = Image.Load<Rgba32>(Path.Combine("Resources", "grid.png"));
+            using var image = Image.Load<Rgba32>(IMG_FILE);
             Directory.CreateDirectory(OUTPUT_FOLDER);
 
             GenericTextureBase textureBase = new();
@@ -95,7 +97,7 @@ namespace ImageLibrary.Test
         [DataRow(PICATextureFormat.A4)]
         public void TestEncode3DS(PICATextureFormat format)
         {
-            using var image = Image.Load<Rgba32>(Path.Combine("Resources", "grid.png"));
+            using var image = Image.Load<Rgba32>(IMG_FILE);
             Directory.CreateDirectory(OUTPUT_FOLDER);
 
             GenericTextureBase textureBase = new();
@@ -111,10 +113,10 @@ namespace ImageLibrary.Test
         [DataRow(ImageFormatDS.NitroTexFormat.Direct)]
         [DataRow(ImageFormatDS.NitroTexFormat.A3I5)]
         [DataRow(ImageFormatDS.NitroTexFormat.A5I3)]
-        //[DataRow(ImageFormatDS.NitroTexFormat.CMPR_4x4)]
+        [DataRow(ImageFormatDS.NitroTexFormat.CMPR_4x4)]
         public void TestEncodeDS(ImageFormatDS.NitroTexFormat format)
         {
-            using var image = Image.Load<Rgba32>(Path.Combine("Resources", "grid.png"));
+            using var image = Image.Load<Rgba32>(IMG_FILE);
             Directory.CreateDirectory(OUTPUT_FOLDER);
 
             GenericTextureBase textureBase = new();
