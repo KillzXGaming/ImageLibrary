@@ -96,6 +96,16 @@ namespace ImageLibrary.Formats.Encoders
 
         public byte[] Encode(byte[] data, uint width, uint height)
         {
+            uint block_count_x = ((uint)width + BlockWidth - 1) / BlockWidth;
+            uint block_count_y = ((uint)height + BlockHeight - 1) / BlockHeight;
+
+            uint compLen = block_count_x * block_count_y * 16;
+            byte[] comp_data = new byte[compLen];
+            // Output as empty for now
+            // Todo the encoder should include a progress argument with an option to cancel/have errors.
+            if (!AstcEncHelper.IsValid)
+                return comp_data;
+
             uint thread_count = 1;
 
             AstcencSwizzle swizzle = new AstcencSwizzle()
@@ -112,11 +122,6 @@ namespace ImageLibrary.Formats.Encoders
             AstcencContext context;
             status = Astcenc.AstcencContextAlloc(ref config, thread_count, out context);
 
-            uint block_count_x = ((uint)width + BlockWidth - 1) / BlockWidth;
-            uint block_count_y = ((uint)height + BlockHeight - 1) / BlockHeight;
-
-            uint compLen = block_count_x * block_count_y * 16;
-            byte[] comp_data = new byte[compLen];
 
             AstcencImage outImage;
             outImage.dimX = width;
