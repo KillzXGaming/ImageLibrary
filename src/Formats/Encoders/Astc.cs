@@ -61,7 +61,8 @@ namespace ImageLibrary.Formats.Encoders
 
         public byte[] Decode(byte[] data, uint width, uint height)
         {
-            if (!IsAstcEncValid())
+            // Do one time check
+            if (!AstcEncHelper.IsValid)
                 return ASTCDecoder.DecodeToRGBA8888(data,
                   (int)BlockWidth, (int)BlockHeight, (int)BlockDepth, (int)width, (int)height, 1);
 
@@ -130,6 +131,46 @@ namespace ImageLibrary.Formats.Encoders
             return comp_data;
         }
 
+        public enum AstcFormat
+        {
+            ASTC_4x4 = 27,
+            ASTC_5x4,
+            ASTC_5x5,
+            ASTC_6x5,
+            ASTC_6x6,
+            ASTC_8x5,
+            ASTC_8x6,
+            ASTC_8x8,
+            ASTC_10x5,
+            ASTC_10x6,
+            ASTC_10x8,
+            ASTC_10x10,
+            ASTC_12x10,
+            ASTC_12x12,
+
+            ASTC_3x3x3,
+            ASTC_4x3x3,
+            ASTC_4x4x3,
+            ASTC_4x4x4,
+            ASTC_5x4x4,
+            ASTC_5x5x4,
+            ASTC_5x5x5,
+            ASTC_6x5x5,
+            ASTC_6x6x5,
+            ASTC_6x6x6,
+        }
+    }
+
+    // Used for a single time check if astc env is present.
+    static class AstcEncHelper
+    {
+        public static bool IsValid = false;
+
+        static AstcEncHelper()
+        {
+            IsValid = IsAstcEncValid();
+        }
+
         // Checks for valid dll paths to use astc enc
         static bool IsAstcEncValid()
         {
@@ -164,35 +205,6 @@ namespace ImageLibrary.Formats.Encoders
             }
 
             return false;
-        }
-
-        public enum AstcFormat
-        {
-            ASTC_4x4 = 27,
-            ASTC_5x4,
-            ASTC_5x5,
-            ASTC_6x5,
-            ASTC_6x6,
-            ASTC_8x5,
-            ASTC_8x6,
-            ASTC_8x8,
-            ASTC_10x5,
-            ASTC_10x6,
-            ASTC_10x8,
-            ASTC_10x10,
-            ASTC_12x10,
-            ASTC_12x12,
-
-            ASTC_3x3x3,
-            ASTC_4x3x3,
-            ASTC_4x4x3,
-            ASTC_4x4x4,
-            ASTC_5x4x4,
-            ASTC_5x5x4,
-            ASTC_5x5x5,
-            ASTC_6x5x5,
-            ASTC_6x6x5,
-            ASTC_6x6x6,
         }
     }
 }
