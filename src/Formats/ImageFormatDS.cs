@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static ImageLibrary.ImageFormatGcn;
 
 namespace ImageLibrary
 {
@@ -109,7 +108,7 @@ namespace ImageLibrary
 
         /// <summary>
         /// The DXGI DDS format will be RGBA8 
-        /// All raw rgba formats are block based and not directly supported
+        /// All raw rgba formats are palette or tile based and not directly supported
         /// </summary>
         /// <returns></returns>
         public DDS.DXGI_FORMAT GetDDSFormat() => DDS.DXGI_FORMAT.DXGI_FORMAT_R8G8B8A8_UNORM;

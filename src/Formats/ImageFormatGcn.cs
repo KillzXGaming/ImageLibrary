@@ -81,7 +81,10 @@ namespace ImageLibrary
 
             // Encode either palette or block based format
             if (PaletteFormats.ContainsKey(Format))
-                return PaletteFormats[this.Format].ConvertTo(data, Palette, (int)width, (int)height);
+            {
+                return EncodeWithPalette(data, width, height,
+                    this.Format == GcnTextureFormats.C8 ? 256 : 16);
+            }
             else
                 return BlockFormats[this.Format].ConvertTo(data, (int)width, (int)height, null);
         }        

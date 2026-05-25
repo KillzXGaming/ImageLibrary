@@ -388,12 +388,12 @@ namespace FontLibrary.Textures
                                     case PICATextureFormat.LA4:
                                         {
                                             byte a = Input[IOffs + 3];
-                                            byte luminance = GetLuminosity(Input, IOffs);
 
                                             // Convert to 4-bit
+                                            byte luminance = (byte)(GetLuminosity(Input, IOffs) >> 4);
                                             byte alpha = (byte)(a >> 4);
-                                            byte packed = (byte)((luminance << 4) | alpha);
-                                            Output[OOffs] = packed;
+
+                                            Output[OOffs] = (byte)((luminance << 4) | alpha);
                                         }
                                         break;
                                     case PICATextureFormat.L8:
