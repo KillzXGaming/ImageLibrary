@@ -28,6 +28,9 @@
     <None Update="image_dds.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="libimage_dds.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="libRG_ETC1.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

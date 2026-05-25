@@ -12,7 +12,8 @@ namespace ImageLibrary.Formats.Encoders
     {
         public static bool IsSupported()
         {
-            return RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+            return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ||
+                   RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
         }
 
         public static unsafe byte[] Decode(byte[] input, uint width, uint height, ImageFormat format)
@@ -292,11 +293,11 @@ namespace ImageLibrary.Formats.Encoders
             out nint out_encoded_data,
             out uint out_encoded_len);
 
-        [DllImport("image_dds", EntryPoint = "free_encoded_data")]
+        [DllImport("image_dds", EntryPoint = "free_data")]
         public static unsafe extern uint free_encoded_data(nint encoded_data);
 
 
-        [DllImport("image_dds", EntryPoint = "free_decoded_data")]
+        [DllImport("image_dds", EntryPoint = "free_data")]
         public static unsafe extern uint free_decoded_data(nint encoded_data);
     }
 }
