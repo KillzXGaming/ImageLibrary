@@ -27,17 +27,16 @@ namespace ImageLibrary.Utils
                     uint w = Math.Max(1, imageInfo.Width >> m);
                     uint h = Math.Max(1, imageInfo.Height >> m);
                     var size = imageInfo.ImageFormat.GetSize(w, h);
-                    if (size == 0)
-                        size = (uint)data.Length;
+                    if (size == 0) size = (uint)data.Length;
 
                     // Slice and decode each layer and mipmap
                     var sliced = span.Slice(ofs, (int)size).ToArray();
-                    surfaces.Add(imageInfo.ImageFormat.Decode(sliced, w, h));
+                    surfaces.Add(imageInfo.ImageFormat.Decode(sliced, w, h).Data);
 
                     ofs += (int)size;
                 }
             }
-            return imageInfo.Data.ToArray();
+            return ByteUtil.CombineByteArray(surfaces.ToArray());
         }
 
         /// <summary>

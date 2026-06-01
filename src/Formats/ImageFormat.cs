@@ -95,8 +95,12 @@ namespace ImageLibrary
         /// <param name="width"></param>
         /// <param name="height"></param>
         /// <returns></returns>
-        public virtual byte[] Decode(byte[] data, uint width, uint height) {
-            return Encoder.Decode(data, width, height);
+        public virtual DecoderOutput Decode(byte[] data, uint width, uint height) {
+            return new DecoderOutput() {
+                Data = Encoder.Decode(data, width, height),
+                Width = width,
+                Height = height
+            };
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
-﻿using SixLabors.ImageSharp.ColorSpaces;
+﻿using CommunityToolkit.HighPerformance;
+using SixLabors.ImageSharp.ColorSpaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,6 +30,17 @@ namespace ImageLibrary.PlatformSwizzle
         public virtual byte[] DeswizzleAllSurfaces(GenericTextureBase imageInfo)
         {
             return imageInfo.Data.ToArray();
+        }
+
+        /// <summary>
+        /// Swizzles all layers including arrays and mip maps.
+        /// </summary>
+        /// <param name="texture"></param>
+        /// <param name="imageData"></param>
+        /// <returns></returns>
+        public virtual byte[] SwizzleAllSurfaces(GenericTextureBase texture, byte[] imageData)
+        {
+            return imageData;
         }
 
         /// <summary>
@@ -67,20 +79,28 @@ namespace ImageLibrary.PlatformSwizzle
         /// <param name="arrayLevel"></param>
         /// <param name="mipLevel"></param>
         /// <returns></returns>
-        public virtual byte[] Swizzle(GenericTextureBase imageInfo, byte[] imageData, int arrayLevel, int mipLevel)
+        public virtual byte[] SwizzleSlices(GenericTextureBase imageInfo, 
+            List<GenericTextureBase.ImportSlice> surfaces)
         {
-            return imageData;
-        }
+            int ofs = 0;
+            for (int a = 0; a < imageInfo.ArrayCount; a++)
+            {
+                for (int m = 0; m < imageInfo.MipCount; m++)
+                {
+                    uint w = Math.Max(1, imageInfo.Width >> m);
+                    uint h = Math.Max(1, imageInfo.Height >> m);
+                    var size = imageInfo.ImageFormat.GetSize(w, h);
 
-        /// <summary>
-        /// Swizzles all layers including arrays and mip maps.
-        /// </summary>
-        /// <param name="texture"></param>
-        /// <param name="imageData"></param>
-        /// <returns></returns>
-        public virtual byte[] SwizzleAllSurfaces(GenericTextureBase texture, byte[] imageData)
-        {
-            return imageData;
+                    var surface = surfaces.FirstOrDefault(x => x.Mip == m && x.Array == a);
+                    if (surface != null)
+                    {
+                        var slice = imageInfo.Data.Slice(ofs, (int)size);
+                        surface.Encoded.AsMemory().CopyTo(slice);
+                    }
+                    ofs += (int)size;
+                }
+            }
+            return imageInfo.Data.ToArray();
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using ImageLibrary.Formats.Encoders;
+﻿using ImageLibrary.Formats;
+using ImageLibrary.Formats.Encoders;
 using ImageLibrary.Formats.Encoders.Nitro;
 using ImageLibrary.Helpers;
 using ImageLibrary.Interfaces;
@@ -72,11 +73,16 @@ namespace ImageLibrary
         /// </summary>
         public override string ToString() => Format.ToString();
 
-        public virtual byte[] Decode(byte[] data, uint width, uint height)
+        public virtual DecoderOutput Decode(byte[] data, uint width, uint height)
         {
-            // Decode either palette or block based format
-            return NitroTexDecoder.DecodeTexture((int)width, (int)height,
-                this.Format, data, Palette, PaletteIdx, Color0);
+            return new DecoderOutput()
+            {          
+                // Decode either palette or block based format
+                Data = NitroTexDecoder.DecodeTexture((int)width, (int)height,
+                    this.Format, data, Palette, PaletteIdx, Color0),
+                Width = width,
+                Height = height
+            };
         }
 
         public virtual byte[] Encode(byte[] data, uint width, uint height)

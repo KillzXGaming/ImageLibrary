@@ -1,7 +1,9 @@
-﻿using ImageLibrary.Formats.Encoders;
+﻿using ImageLibrary.Formats;
+using ImageLibrary.Formats.Encoders;
 using ImageLibrary.Formats.Encoders.Gcn;
 using ImageLibrary.Helpers;
 using ImageLibrary.Interfaces;
+using ImageLibrary.Pixels;
 using ImageLibrary.Utils;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -16,8 +18,17 @@ namespace ImageLibrary
     /// <summary>
     /// Represents an image format that can encode and decode image data.
     /// </summary>
-    public class ImageFormatGcn : IImageFormat
+    public class ImageFormatGcn : IImageFormat, IPaletteFormat
     {
+        public int PaletteEncodeColorCount = 256;
+
+        public RgbaColor[] GetPaletteColors() => Palette.GetPaletteColors();
+
+        public void SetPaletteColor(RgbaColor color, int index)
+        {
+            Palette.SetPaletteColor(color, index);
+        }
+
         /// <summary>
         /// The palette used for palette based formats (C4, C8, and C14X2)
         /// </summary>
@@ -32,6 +43,11 @@ namespace ImageLibrary
         /// Returns true if the format is a palette type or not.
         /// </summary>
         public bool IsFormatPalette => PaletteFormats.ContainsKey(Format);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int MaxPaletteColorCount => this.Format == GcnTextureFormats.C4 ? 16 : 256;
 
         /// <summary>
         /// Gets the raw encoder. Always rgba8.
@@ -50,6 +66,10 @@ namespace ImageLibrary
             Palette = palette;
         }
 
+        public void ClearPalette() {
+            this.Palette.Load(new byte[0]);
+        }
+
         /// <summary>
         /// Calculates total amount of mips possible for the image based on width/height
         /// </summary>
@@ -66,13 +86,21 @@ namespace ImageLibrary
         /// </summary>
         public override string ToString() => Format.ToString();
 
-        public virtual byte[] Decode(byte[] data, uint width, uint height)
+        public virtual DecoderOutput Decode(byte[] data, uint width, uint height)
         {
             // Decode either palette or block based format
+            byte[] decomp = new byte[0];
             if (PaletteFormats.ContainsKey(Format))
-                return PaletteFormats[this.Format].ConvertFrom(data, Palette, (int)width, (int)height);
+                decomp = PaletteFormats[this.Format].ConvertFrom(data, Palette, (int)width, (int)height);
             else
-                return BlockFormats[this.Format].ConvertFrom(data, (int)width, (int)height);
+                decomp = BlockFormats[this.Format].ConvertFrom(data, (int)width, (int)height);
+
+            return new DecoderOutput()
+            {
+                Data = decomp,
+                Width = width,
+                Height = height
+            };
         }
 
         public virtual byte[] Encode(byte[] data, uint width, uint height)
@@ -83,7 +111,9 @@ namespace ImageLibrary
             if (PaletteFormats.ContainsKey(Format))
             {
                 return EncodeWithPalette(data, width, height,
-                    this.Format == GcnTextureFormats.C8 ? 256 : 16);
+                    this.Format == GcnTextureFormats.C8 ? 
+                    Math.Min(PaletteEncodeColorCount, 256) : 
+                    Math.Min(PaletteEncodeColorCount, 16));
             }
             else
                 return BlockFormats[this.Format].ConvertTo(data, (int)width, (int)height, null);

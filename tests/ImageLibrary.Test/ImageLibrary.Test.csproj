@@ -31,6 +31,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Resources\cubemap.dds">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\cubemap.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Resources\grid.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

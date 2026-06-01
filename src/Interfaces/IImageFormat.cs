@@ -26,7 +26,7 @@ namespace ImageLibrary
         /// <param name="width">The width of the image in pixels.</param>
         /// <param name="height">The height of the image in pixels.</param>
         /// <returns>A byte array containing the decoded pixel data.</returns>
-        byte[] Decode(byte[] data, uint width, uint height);
+        DecoderOutput Decode(byte[] data, uint width, uint height);
 
         /// <summary>
         /// Encodes a pixel buffer into image data for this format.
@@ -36,6 +36,20 @@ namespace ImageLibrary
         /// <param name="height">The height of the image in pixels.</param>
         /// <returns>A byte array containing the encoded image data.</returns>
         byte[] Encode(byte[] data, uint width, uint height);
+
+        /// <summary>
+        /// Gets the output width for image format decoding.
+        /// </summary>
+        /// <param name="width"></param>
+        /// <returns></returns>
+        public uint GetWidth(uint width) => width;
+
+        /// <summary>
+        /// Gets the output height for image format decoding.
+        /// </summary>
+        /// <param name="height"></param>
+        /// <returns></returns>
+        public uint GetHeight(uint height) => height;
 
         /// <summary>
         /// Gets the number of bytes used per pixel for this image format.

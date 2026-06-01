@@ -42,11 +42,15 @@ namespace ImageLibrary.Formats.Encoders.Gcn
         {
             Tuple<byte[], ushort[]> palettePair;
 
+            // Keep previous palette colors to merge for mipmaps
+            List<ushort> rawColorData = new List<ushort>();
+            rawColorData.AddRange(palette.GetUShorts());
+
             switch (BPP)
             {
-                case 4: palettePair = EncodeC4(palette.Format, data, width, height); break;
-                case 8: palettePair = EncodeC8(palette.Format, data, width, height); break;
-                case 14: palettePair = EncodeC14(palette.Format, data, width, height); break;
+                case 4: palettePair = EncodeC4(palette.Format, data, rawColorData, width, height); break;
+                case 8: palettePair = EncodeC8(palette.Format, data, rawColorData, width, height); break;
+                case 14: palettePair = EncodeC14(palette.Format, data, rawColorData, width, height); break;
                 default:
                     throw new NotImplementedException($"Invalid bits per pixel {BPP}");
             }
@@ -208,7 +212,7 @@ namespace ImageLibrary.Formats.Encoders.Gcn
             return finalDest;
         }
 
-        public static Tuple<byte[], ushort[]> EncodeC4(GcnPaletteFormats PaletteFormat, byte[] m_rgbaImageData, int Width, int Height)
+        public static Tuple<byte[], ushort[]> EncodeC4(GcnPaletteFormats PaletteFormat, byte[] m_rgbaImageData, List<ushort> rawColorData, int Width, int Height)
         {
             List<Color32> palColors = new List<Color32>();
 
@@ -220,7 +224,6 @@ namespace ImageLibrary.Formats.Encoders.Gcn
             for (int i = 0; i < Width * Height * 4; i += 4)
                 palColors.Add(new Color32(m_rgbaImageData[i + 2], m_rgbaImageData[i + 1], m_rgbaImageData[i + 0], m_rgbaImageData[i + 3]));
 
-            List<ushort> rawColorData = new List<ushort>();
             Dictionary<Color32, byte> pixelColorIndexes = new Dictionary<Color32, byte>();
             foreach (Color32 col in palColors)
             {
@@ -247,7 +250,7 @@ namespace ImageLibrary.Formats.Encoders.Gcn
             return new Tuple<byte[], ushort[]>(pixIndices, rawColorData.ToArray());
         }
 
-        public static Tuple<byte[], ushort[]> EncodeC8(GcnPaletteFormats PaletteFormat, byte[] m_rgbaImageData, int Width, int Height)
+        public static Tuple<byte[], ushort[]> EncodeC8(GcnPaletteFormats PaletteFormat, byte[] m_rgbaImageData, List<ushort> rawColorData, int Width, int Height)
         {
             List<Color32> palColors = new List<Color32>();
 
@@ -259,7 +262,6 @@ namespace ImageLibrary.Formats.Encoders.Gcn
             for (int i = 0; i < (Width * Height) * 4; i += 4)
                 palColors.Add(new Color32(m_rgbaImageData[i + 2], m_rgbaImageData[i + 1], m_rgbaImageData[i + 0], m_rgbaImageData[i + 3]));
 
-            List<ushort> rawColorData = new List<ushort>();
             Dictionary<Color32, byte> pixelColorIndexes = new Dictionary<Color32, byte>();
             foreach (Color32 col in palColors)
             {
@@ -299,7 +301,7 @@ namespace ImageLibrary.Formats.Encoders.Gcn
             return new Tuple<byte[], ushort[]>(pixIndices, rawColorData.ToArray());
         }
 
-        public static Tuple<byte[], ushort[]> EncodeC14(GcnPaletteFormats PaletteFormat, byte[] m_rgbaImageData, int Width, int Height)
+        public static Tuple<byte[], ushort[]> EncodeC14(GcnPaletteFormats PaletteFormat, byte[] m_rgbaImageData, List<ushort> rawColorData, int Width, int Height)
         {
             List<Color32> palColors = new List<Color32>();
 
@@ -311,7 +313,6 @@ namespace ImageLibrary.Formats.Encoders.Gcn
             for (int i = 0; i < Width * Height * 4; i += 4)
                 palColors.Add(new Color32(m_rgbaImageData[i + 2], m_rgbaImageData[i + 1], m_rgbaImageData[i + 0], m_rgbaImageData[i + 3]));
 
-            List<ushort> rawColorData = new List<ushort>();
             Dictionary<Color32, ushort> pixelColorIndexes = new Dictionary<Color32, ushort>();
             foreach (Color32 col in palColors)
             {
@@ -529,9 +530,9 @@ namespace ImageLibrary.Formats.Encoders.Gcn
                 b = (byte)(b << 8 - 4 | b);
             }
 
-            dest[destOffset + 0] = b;
+            dest[destOffset + 0] = r;
             dest[destOffset + 1] = g;
-            dest[destOffset + 2] = r;
+            dest[destOffset + 2] = b;
             dest[destOffset + 3] = a;
         }
     }

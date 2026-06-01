@@ -1,4 +1,5 @@
-﻿using ImageLibrary.PlatformSwizzle.Algorithms.Switch;
+﻿using CommunityToolkit.HighPerformance;
+using ImageLibrary.PlatformSwizzle.Algorithms.Switch;
 using ImageLibrary.Utils;
 using SixLabors.ImageSharp;
 using System;
@@ -24,7 +25,9 @@ namespace ImageLibrary.PlatformSwizzle
         //Adjusted on encode
         public uint ReadTextureLayout;
         public uint ImageSize;
-        public long[] MipOffsets;
+
+        public long[] MipOffsets = new long[0];
+        public long[] MipSizes = new long[0];
 
         //Quick check for linear tiling
         public bool LinearMode => TileMode == 1;
@@ -41,25 +44,8 @@ namespace ImageLibrary.PlatformSwizzle
             uint bd = ImageFormat.GetBlockDepth(texture.ImageFormat);
 
             var blk_sizes = (bw, bh, bd);
-
             return TextureConverter.Deswizzle(texture.Width, texture.Height, texture.Depth, texture.ArrayCount,
                  texture.MipCount, blk_sizes, bpp, tileMode, image_data.ToArray(), (int)Target, IsOrin);
-        }
-
-        public byte[] DeswizzleAllSurfaces(IImageFormat format, byte[] imageData, uint width, uint height,
-            uint mipCount = 1, uint arrayCount = 1, uint depth = 1)
-        {
-            var tileMode = TileMode;
-
-            uint bpp = format.GetBytesPerPixel();
-            uint bw = ImageFormat.GetBlockWidth(format);
-            uint bh = ImageFormat.GetBlockHeight(format);
-            uint bd = ImageFormat.GetBlockDepth(format);
-
-            var blk_sizes = (bw, bh, bd);
-
-            return TextureConverter.Deswizzle(width, height, depth, arrayCount,
-                 mipCount, blk_sizes, bpp, tileMode, imageData, (int)Target, IsOrin);
         }
 
         public override byte[] Deswizzle(GenericTextureBase texture, int arrayLevel, int mipLevel)
@@ -74,16 +60,12 @@ namespace ImageLibrary.PlatformSwizzle
 
             var blk_sizes = (bw, bh, bd);
 
-            return TextureConverter.DeswizzleSurface(texture.Width, texture.Height, texture.Depth, texture.ArrayCount,
+            return TextureConverter.DeswizzleSurfaceSlice(texture.Width, texture.Height, texture.Depth, texture.ArrayCount,
                  texture.MipCount, blk_sizes, bpp, (uint)arrayLevel, (uint)mipLevel, image_data.ToArray(), (int)Target, IsOrin);
         }
 
-        public override byte[] Swizzle(GenericTextureBase texture, byte[] imageData, int arrayLevel, int mipLevel)
-        {
-            return base.Swizzle(texture, imageData, mipLevel, arrayLevel);
-        }
-
-        public override byte[] SwizzleAllSurfaces(GenericTextureBase texture, byte[] imageData)
+        public override byte[] SwizzleSlices(GenericTextureBase texture,
+            List<GenericTextureBase.ImportSlice> surfaces)
         {
             var tileMode = TileMode;
 
@@ -91,123 +73,55 @@ namespace ImageLibrary.PlatformSwizzle
             uint bw = ImageFormat.GetBlockWidth(texture.ImageFormat);
             uint bh = ImageFormat.GetBlockHeight(texture.ImageFormat);
             uint bd = ImageFormat.GetBlockDepth(texture.ImageFormat);
+            // Inject a single swizzled slice
+            var blk_sizes = (bw, bh, bd);
+            TextureConverter.SwizzleSliceSurfaces(surfaces, texture.Data, texture.Width, texture.Height, texture.Depth, texture.ArrayCount,
+                 texture.MipCount, blk_sizes, bpp);
+            return texture.Data.ToArray();
+        }
 
-            Console.WriteLine($"{texture.ImageFormat} {bpp}");
+        public override byte[] SwizzleAllSurfaces(GenericTextureBase texture, byte[] imageData)
+        {
+            // Compute mip meta data for offset/size info which may get used for file formats
+            CalculateMipInfo(texture);
 
+            var tileMode = TileMode;
+            uint bpp = texture.ImageFormat.GetBytesPerPixel();
+            uint bw = ImageFormat.GetBlockWidth(texture.ImageFormat);
+            uint bh = ImageFormat.GetBlockHeight(texture.ImageFormat);
+            uint bd = ImageFormat.GetBlockDepth(texture.ImageFormat);
             var blk_sizes = (bw, bh, bd);
 
             return TextureConverter.Swizzle(texture.Width, texture.Height, texture.Depth, texture.ArrayCount,
                  texture.MipCount, blk_sizes, bpp, tileMode, imageData, (int)Target, IsOrin);
         }
 
-        public byte[] SwizzleAllSurfaces(IImageFormat format, byte[] imageData, uint width, uint height, 
-            uint mipCount = 1, uint arrayCount = 1, uint depth = 1)
-        {
-            var tileMode = TileMode;
 
-            uint bpp = format.GetBytesPerPixel();
-            uint bw = ImageFormat.GetBlockWidth(format);
-            uint bh = ImageFormat.GetBlockHeight(format);
-            uint bd = ImageFormat.GetBlockDepth(format);
-
-            Console.WriteLine($"{format} {bpp}");
-
-            var blk_sizes = (bw, bh, bd);
-
-            return TextureConverter.Swizzle(width, height, depth, arrayCount,
-                 mipCount, blk_sizes, bpp, tileMode, imageData, (int)Target, IsOrin);
-        }
-
-        // Computes mipmap offsets
-        public List<long> GetMipOffsets(GenericTextureBase texture)
+        // Computes mipmap offsets/sizes
+        private void CalculateMipInfo(GenericTextureBase texture)
         {
             uint bpp = texture.ImageFormat.GetBytesPerPixel();
             uint bw = ImageFormat.GetBlockWidth(texture.ImageFormat);
             uint bh = ImageFormat.GetBlockHeight(texture.ImageFormat);
             uint bd = ImageFormat.GetBlockDepth(texture.ImageFormat);
-
             var blk_sizes = (bw, bh, bd);
 
             List<long> mip_offsets = new List<long>();
+            List<long> mip_sizes = new List<long>();
 
             uint offset = 0;
-            for (int mip = 0; mip < texture.MipCount; mip++)
-            {
-                var size = TextureConverter.GetSwizzleSurfaceSizeMip(mip, texture.Width,
-                    texture.Height, texture.Depth, blk_sizes, bpp);
-
-                mip_offsets.Add(offset);
-
-                offset += size;
-            }
-
-            return mip_offsets;
-        }
-
-        // Computes mipmap sizes
-        public List<long> GetMipSizes(GenericTextureBase texture)
-        {
-            uint bpp = texture.ImageFormat.GetBytesPerPixel();
-            uint bw = ImageFormat.GetBlockWidth(texture.ImageFormat);
-            uint bh = ImageFormat.GetBlockHeight(texture.ImageFormat);
-            uint bd = ImageFormat.GetBlockDepth(texture.ImageFormat);
-
-            var blk_sizes = (bw, bh, bd);
-
-            List<long> mip_sizes = new List<long>();
             for (int mip = 0; mip < texture.MipCount; mip++)
             {
                 var size = TextureConverter.GetSwizzleSurfaceSizeMip(mip, texture.Width,
                     texture.Height, texture.Depth, blk_sizes, bpp);
 
                 mip_sizes.Add(size);
-            }
-            return mip_sizes;
-        }
-
-        // Creates a full texture list of both surfaces and mipmaps
-        public List<List<byte[]>> CreateSurfaceList(GenericTextureBase texture)
-        {
-            List<List<byte[]>> surfaces = new List<List<byte[]>>();
-
-            uint bpp = texture.ImageFormat.GetBitsPerPixel();
-            uint bw = ImageFormat.GetBlockWidth(texture.ImageFormat);
-            uint bh = ImageFormat.GetBlockHeight(texture.ImageFormat);
-            uint bd = ImageFormat.GetBlockDepth(texture.ImageFormat);
-
-            var block_height_mip0 = TextureConverter.GetBlockHeight(TextureConverter.DIV_ROUND_UP(texture.Height, bh));
-
-            uint offset = 0;
-            for (int a = 0; a < texture.ArrayCount; a++)
-            {
-                List<byte[]> mipmaps = new List<byte[]>();
-
-                for (int mip = 0; mip < texture.MipCount; mip++)
-                {
-                    var mip_width = Math.Max(TextureConverter.DIV_ROUND_UP(texture.Width >> mip, bw), 1);
-                    var mip_height = Math.Max(TextureConverter.DIV_ROUND_UP(texture.Height >> mip, bh), 1);
-                    var mip_depth = Math.Max(TextureConverter.DIV_ROUND_UP(texture.Depth >> mip, bd), 1);
-
-                    var mip_block_height = tegra_swizzle_native_x64.MipBlockHeight(mip_height, block_height_mip0);
-
-                    var size = tegra_swizzle_native_x64.SwizzleSurfaceMipSize(
-                        mip_width, mip_height, mip_depth, mip_block_height, bpp);
-
-                    if (texture.Data.Length < (long)(offset + size))
-                        throw new Exception($"Invalid data length! {texture.Data.Length} for mip {mip} {mip_width}x{mip_height}");
-
-                    mipmaps.Add(texture.Data.Slice((int)offset, (int)size).ToArray());
-
-                    offset += (uint)size;
-                }
-                mipmaps[0] = ByteUtil.CombineByteArray(mipmaps.ToArray());
-                surfaces.Add(mipmaps);
-
-                //align between layers
-                offset = TextureConverter.AlignLayerSize(offset, texture.Height, texture.Depth, block_height_mip0, 1);
+                mip_offsets.Add(offset);
+                offset += size;
             }
 
-            return surfaces;
+            this.MipOffsets = mip_offsets.ToArray();
+            this.MipSizes = mip_sizes.ToArray();
         }
     }
 }

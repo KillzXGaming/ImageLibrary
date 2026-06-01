@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SixLabors.ImageSharp;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -21,15 +22,14 @@ namespace ImageLibrary.PlatformSwizzle.Algorithms.Switch
             var mip_depth = Math.Max(DIV_ROUND_UP(depth >> mip, (uint)dims.depth), 1);
 
             var mip_block_height = tegra_swizzle_native_x64.MipBlockHeight(mip_height, block_height_mip0);
-            var mip_block_depth = 1;
 
             var swizzled_size = tegra_swizzle_native_x64.SwizzleSurfaceMipSize(mip_width, mip_height, depth, mip_block_height, bytes_per_pixel);
-            var deswizzled_size = tegra_swizzle_native_x64.DewizzleSurfaceMipSize(mip_width, mip_height, mip_depth, bytes_per_pixel);
             return (uint)swizzled_size;
         }
 
-        public static byte[] DeswizzleSurface(uint width, uint height, uint depth, uint array_count, uint mip_count,
-        (uint, uint, uint) blockSizes, uint bpp, uint array_level, uint mip_level, byte[] data, int target = 1, bool is_orin = false)
+        // Deswizzle a certain slice
+        public static byte[] DeswizzleSurfaceSlice(uint width, uint height, uint depth, uint array_count, uint mip_count,
+            (uint, uint, uint) blockSizes, uint bpp, uint array_level, uint mip_level, byte[] data, int target = 1, bool is_orin = false)
         {
             var output = Deswizzle(width, height, depth, array_count, mip_count, blockSizes, bpp, 0, data, target, is_orin);
 
@@ -43,8 +43,6 @@ namespace ImageLibrary.PlatformSwizzle.Algorithms.Switch
                     var mip_width = Math.Max(width >> mip, 1);
                     var mip_height = Math.Max(height >> mip, 1);
                     var mip_depth = Math.Max(depth >> mip, 1);
-
-                    // var dst_size = tegra_swizzle_native_x64.DewizzleSurfaceMipSize(mip_width, mip_height, mip_depth, bpp);
                     var dst_size = GetDeswizzleSurfaceSize(mip_width, mip_height, mip_depth, 1, 1, dims, bpp);
 
                     if (a == array_level && mip == mip_level)
@@ -56,21 +54,14 @@ namespace ImageLibrary.PlatformSwizzle.Algorithms.Switch
             return null;
         }
 
-        public static byte[] DeswizzleSurface2(uint width, uint height, uint depth, uint array_count, uint mip_count,
-            (uint, uint, uint) blockSizes, uint bpp, uint array_level, uint mip_level, byte[] data, int target = 1, bool is_orin = false)
+        // To swizzle a certain slice
+        public static void SwizzleSliceSurfaces(List<GenericTextureBase.ImportSlice> surfaces,
+            Memory<byte> data, uint width, uint height, uint depth, uint array_count, uint mip_count,
+            (uint, uint, uint) blockSizes, uint bpp, bool is_orin = false)
         {
-            if (array_level >= array_count)
-                throw new Exception($"Array level out of range {array_level} of {array_count}");
-            if (mip_level >= mip_count)
-                throw new Exception($"Mip level out of range {mip_level} of {mip_count}");
-
             BlockDimX64 dims = new BlockDimX64() { width = blockSizes.Item1, height = blockSizes.Item2, depth = blockSizes.Item3, };
-            var block_height_mip0 = GetBlockHeight(DIV_ROUND_UP(height, (uint)dims.height));
-
-
-            var sizeTotal = tegra_swizzle_native_x64.SwizzleSurfaceSize(
-                width, height, depth, dims, block_height_mip0, bpp, mip_count, array_count);
-            Debug.WriteLine(sizeTotal.ToString());
+            var blockHeightMip0 = GetBlockHeight(DIV_ROUND_UP(height, (uint)dims.height));
+            var size2 = GetSwizzleSurfaceSize(width, height, depth, array_count, mip_count, dims, blockHeightMip0, bpp);
 
             uint offset = 0;
             for (int a = 0; a < array_count; a++)
@@ -80,44 +71,29 @@ namespace ImageLibrary.PlatformSwizzle.Algorithms.Switch
                     var mip_width = Math.Max(width >> mip, 1);
                     var mip_height = Math.Max(height >> mip, 1);
                     var mip_depth = Math.Max(depth >> mip, 1);
-                    var mip_block_height = tegra_swizzle_native_x64.MipBlockHeight(mip_height, block_height_mip0);
+                    var mip_block_height = tegra_swizzle_native_x64.MipBlockHeight(mip_height, blockHeightMip0);
+                    var size = GetSwizzleSurfaceSizeMip(mip, width, height, depth, ((uint)dims.width, (uint)dims.height, (uint)dims.depth), bpp);
 
-                    var size = tegra_swizzle_native_x64.SwizzleSurfaceMipSize(
-                        mip_width, mip_height, mip_depth, mip_block_height, bpp);
+                    var surface = surfaces.FirstOrDefault(x => x.Array == a && x.Mip == mip);
 
-                    //Expand data to the expected swizzle data if necessary
-                    //A few cases like .txtg does this when no alignment is used
-                    if ((int)size > data.Length)
+                    if (surface != null)
                     {
-                        var expanded = new byte[size];
-                        Array.Copy(data, 0, expanded, 0, data.Length);
-                        data = expanded;
+                        var output = new byte[size];
+                        SwizzleSurface(mip_width, mip_height, 1, 1, 1, bpp, surface.Encoded,
+                            dims, (uint)mip_block_height, output, is_orin);
+
+                        var slice = data.Slice((int)offset, (int)size);
+                        output.AsMemory().CopyTo(slice);
                     }
 
-                    if (a == array_level && mip == mip_level)
-                    {
-                        var dst_size = tegra_swizzle_native_x64.DewizzleSurfaceMipSize(mip_width, mip_height, mip_depth, bpp);
-                        var input = mip_level == 0 ? data : data.AsSpan().Slice((int)offset, (int)size).ToArray();
-
-                        var output = new byte[dst_size];
-                        DeswizzleSurface(mip_width, mip_height, mip_depth, 1, 1, bpp, input, dims, (uint)mip_block_height, output, is_orin);
-                        return output;
-                    }
                     offset += (uint)size;
                 }
                 //align between layers
-                offset = AlignLayerSize(offset, height, depth, block_height_mip0, 1);
+                offset = AlignLayerSize(offset, height, depth, blockHeightMip0, 1);
             }
-            return null;
         }
 
-        public static uint GetBlockHeightLog(uint height, uint blkHeight)
-        {
-            var blockHeight = GetBlockHeight(DIV_ROUND_UP(height, blkHeight));
-            return (uint)Convert.ToString(blockHeight, 2).Length - 1;
-        }
-
-
+        // Deswizzle all slices
         public static byte[] Deswizzle(uint width, uint height, uint depth, uint array_count, uint mip_count,
             (uint, uint, uint) blockSizes, uint bpp, uint tileMode, byte[] data, int target = 1, bool is_orin = false)
         {
@@ -142,12 +118,12 @@ namespace ImageLibrary.PlatformSwizzle.Algorithms.Switch
             return output;
         }
 
-        public static byte[] Swizzle(uint width, uint height, uint depth, uint array_count, uint mip_count,
+        // Swizzle all slices
+        public static byte[]  Swizzle(uint width, uint height, uint depth, uint array_count, uint mip_count,
             (uint, uint, uint) blockSizes, uint bpp, uint tileMode, byte[] data, int target = 1, bool is_orin = false)
         {
             BlockDimX64 dims = new BlockDimX64() { width = blockSizes.Item1, height = blockSizes.Item2, depth = blockSizes.Item3, };
             var blockHeightMip0 = GetBlockHeight(DIV_ROUND_UP(height, (uint)dims.height));
-
             var size = GetSwizzleSurfaceSize(width, height, depth, array_count, mip_count, dims, blockHeightMip0, bpp);
             var desize = GetDeswizzleSurfaceSize(width, height, depth, array_count, mip_count, dims, bpp);
 

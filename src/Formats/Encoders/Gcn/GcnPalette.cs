@@ -81,6 +81,11 @@ namespace ImageLibrary.Formats.Encoders.Gcn
             return indices;
         }
 
+        public void SetPaletteColor(RgbaColor color, int index)
+        {
+
+        }
+
         public RgbaColor[] GetPaletteColors()
         {
             var data = this.GetBytes();

@@ -6,11 +6,10 @@ using System.Threading.Tasks;
 
 namespace ImageLibrary
 {
-    public class ImportSettings
+    public struct DecoderOutput
     {
-        public bool FlipVertical = false;
-
-        public int MipCount = 1;
-        public bool CrossCubemap = false;
+        public byte[] Data;
+        public uint Width;
+        public uint Height;
     }
 }

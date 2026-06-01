@@ -7,9 +7,12 @@ using ImageLibrary.Utils;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
+using System;
 using System.ComponentModel;
 using System.IO;
 using System.Text;
+using static ImageLibrary.WiiU.GX2;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ImageLibrary
 {
@@ -146,6 +149,18 @@ namespace ImageLibrary
         /// </summary>
         public object RenderHandle;
 
+        // Editor functions
+
+        /// <summary>
+        /// Determines if the texture is renamable if set in a GUI.
+        /// </summary>
+        public bool CanRename = true;
+
+        /// <summary>
+        /// Determines if the texture is replacable if set in a GUI.
+        /// </summary>
+        public bool CanReplace = true;
+
         public GenericTextureBase()
         {
             this.PropertiesObject = new PropertyDisplay(this); 
@@ -233,6 +248,9 @@ namespace ImageLibrary
             if (settings.FlipVertical)
                 image.Mutate(x => x.Flip(FlipMode.Vertical));
 
+            if (settings.CrossCubemap)
+                this.Type = TextureType.TextureCube;
+
             // Expect cubemaps to be cross image if not fully square
             if (IsCubemap && (uint)image.Width / 4 == (uint)image.Height / 3)
             {
@@ -269,6 +287,34 @@ namespace ImageLibrary
             return true;
         }
 
+        public void ImportSlices(string path, int array, int depth, int mip)
+            => ImportSlices(new List<ImportSlice>() { 
+                new ImportSlice()
+                {
+                    Image = Image.Load<Rgba32>(path),
+                    Array = array,
+                    Depth = depth, 
+                    Mip = mip,
+                },
+            });
+
+        public void ImportSlices(List<ImportSlice> slices)
+        {
+            foreach (var slice in slices)
+            {
+                // For slice injection, we inject with our target size
+                var image = slice.Image;
+                var mip_width = Math.Max(this.Width >> slice.Mip, 1);
+                var mip_height = Math.Max(this.Height >> slice.Mip, 1);
+                if (image.Width != mip_width || image.Height != mip_height)
+                    image.Mutate(x => x.Resize((int)mip_width, (int)mip_height));
+                // Next encode the data
+                slice.Encoded = this.ImageFormat.Encode(image.GetSourceInBytes(), mip_width, mip_height);
+            }
+            // Finally inject into the slice of swizzle or unswizzled data
+            this.PlatformSwizzle.SwizzleSlices(this, slices);
+        }
+
         /// <summary>
         /// Imports a DDS image.
         /// Returns false if file is not supported or fails.
@@ -276,8 +322,8 @@ namespace ImageLibrary
         /// <param name="dds"></param>
         public bool Import(DDS dds)
         {
-           // if (!this.IsFormatSupported(dds.Format))
-          //      return false;
+            if (!this.IsFormatSupported(dds.Format))
+                return false;
 
             this.Width = dds.MainHeader.Width;
             this.Height = dds.MainHeader.Height;
@@ -285,7 +331,7 @@ namespace ImageLibrary
             this.ArrayCount = dds.ArrayCount;
             this.MipCount = dds.MainHeader.MipCount;
             this.Type = TextureType.Texture2D;
-           // this.ImageFormat = new ImageFormat(dds.Format);
+            this.ImageFormat = new ImageFormat(dds.Format);
 
             if (dds.IsCubeMap)
                 this.Type = TextureType.TextureCube;
@@ -400,8 +446,8 @@ namespace ImageLibrary
                 for (int i = 0; i < 6; i++)
                 {
                     byte[] deswizzle = this.PlatformSwizzle.Deswizzle(this, i, settings.MipLevel);
-                    byte[] decoded = this.ImageFormat.Decode(deswizzle, mipWidth, mipHeight);
-                    arrays.Add(decoded);
+                    var decoded = this.ImageFormat.Decode(deswizzle, mipWidth, mipHeight);
+                    arrays.Add(decoded.Data);
                 }
                 var output = CrossCubemapConverter.ToCrossImage(arrays, (int)mipWidth, (int)mipHeight);
                 return new OutputRgba()
@@ -414,13 +460,14 @@ namespace ImageLibrary
             else
             {
                 byte[] deswizzle = this.PlatformSwizzle.Deswizzle(this, settings.ArrayLevel, settings.MipLevel);
-                byte[] rgba = this.ImageFormat.Decode(deswizzle, mipWidth, mipHeight);
+                var decoded = this.ImageFormat.Decode(deswizzle, mipWidth, mipHeight);
+                var rgba = decoded.Data;
 
                 if (settings.UseComponentChannels)
-                    rgba = ImageUtil.ProcessComponentChannels(this, rgba, mipWidth, mipHeight);
+                    rgba = ImageUtil.ProcessComponentChannels(this, rgba, decoded.Width, decoded.Height);
 
                 if (settings.ChannelType != TextureChannelType.RGBA)
-                    rgba = ImageUtil.ProcessComponentChannels(rgba, mipWidth, mipHeight,
+                    rgba = ImageUtil.ProcessComponentChannels(rgba, decoded.Width, decoded.Height,
                         settings.ChannelType,
                         settings.ChannelType,
                         settings.ChannelType,
@@ -430,8 +477,8 @@ namespace ImageLibrary
                 return new OutputRgba()
                 {
                     Rgba = rgba,
-                    Width = mipWidth,
-                    Height = mipHeight,
+                    Width = decoded.Width,
+                    Height = decoded.Height,
                 };
             }
         }
@@ -537,6 +584,15 @@ namespace ImageLibrary
             public byte[] Rgba;
             public uint Width;
             public uint Height;
+        }
+
+        public class ImportSlice
+        {
+            public Image<Rgba32> Image;
+            public int Array;
+            public int Mip;
+            public int Depth;
+            public byte[] Encoded;
         }
 
         public class PropertyDisplay

@@ -63,12 +63,22 @@ namespace ImageLibrary
         /// <param name="width"></param>
         /// <param name="height"></param>
         /// <returns></returns>
-        public byte[] Decode(byte[] data, uint width, uint height) {
+        public DecoderOutput Decode(byte[] data, uint width, uint height) {
             var rgba = TextureConverter3DS.DecodeBuffer(data, (int)width, (int)height, this.Format);
             if (SwizzleTransformation == PICASwizzleTransformation.FlipY)
-                return rgba;
+                return new DecoderOutput()
+                {
+                    Data = rgba,
+                    Width = width,
+                    Height = height
+                };
 
-            return FlipImage(rgba, (int)width, (int)height);
+            return new DecoderOutput()
+            {
+                Data = FlipImage(rgba, (int)width, (int)height),
+                Width = width,
+                Height = height
+            };
         }
 
         static byte[] FlipImage(byte[] data, int width, int height)

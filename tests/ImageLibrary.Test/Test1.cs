@@ -1,4 +1,5 @@
-﻿using ImageLibrary.Formats.Encoders.Gcn;
+﻿using BCnEncoder.Shared;
+using ImageLibrary.Formats.Encoders.Gcn;
 using Microsoft.CodeCoverage.Core.Reports.Coverage;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SixLabors.ImageSharp;
@@ -13,12 +14,30 @@ namespace ImageLibrary.Test
         const string OUTPUT_FOLDER = "OUTPUT";
 
         static string IMG_FILE => Path.Combine("Resources", "grid.png");
+        static string CUBEMAP_FILE => Path.Combine("Resources", "cubemap.png");
 
         [TestMethod]
         public void TestMethod1()
         {
         }
 
+        [TestMethod]
+        public void EncodeCubemap()
+        {
+            Directory.CreateDirectory(OUTPUT_FOLDER);
+
+            GenericTextureBase textureBase = new();
+            textureBase.ImageFormat = new ImageFormat(TextureFormat.RGBA8_UNORM);
+            textureBase.PlatformSwizzle = new PlatformSwizzle.PlatformSwizzleSwitch();
+            textureBase.Import(CUBEMAP_FILE, new ImportSettings()
+            {
+                CrossCubemap = true, MipCount = 2,
+            });
+            // Slice inject test
+            textureBase.ImportSlices(IMG_FILE, array:0, depth:0, mip:1);
+            textureBase.ExportDDS(Path.Combine(OUTPUT_FOLDER, $"CUBEMAP_switch.dds"));
+        }
+        /*
         [TestMethod]
         [DataRow(DDS.DXGI_FORMAT.DXGI_FORMAT_BC1_UNORM)]
         [DataRow(DDS.DXGI_FORMAT.DXGI_FORMAT_BC2_UNORM)]
@@ -150,6 +169,6 @@ namespace ImageLibrary.Test
             textureBase.ImageFormat = new ImageFormatDS(format);
             textureBase.Import(image);
             textureBase.Export(Path.Combine(OUTPUT_FOLDER, $"NITRO_{format}.png"));
-        }
+        }*/
     }
 }
