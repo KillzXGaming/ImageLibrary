@@ -7,6 +7,16 @@ using System.Threading.Tasks;
 
 namespace ImageLibrary.PlatformSwizzle.Algorithms.Switch
 {
+#if WINDOWS
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct BlockDimX64
+    {
+        public ulong width;
+        public ulong height;
+        public ulong depth;
+    }
+#else
     [StructLayout(LayoutKind.Sequential)]
     public struct BlockDimX64
     {
@@ -14,6 +24,7 @@ namespace ImageLibrary.PlatformSwizzle.Algorithms.Switch
         public uint height;
         public uint depth;
     }
+#endif
 
     public class tegra_swizzle_native_x64
     {

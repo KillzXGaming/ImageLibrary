@@ -162,41 +162,51 @@ namespace ImageLibrary.Formats.Encoders
         public enum ImageFormat
         {
             R8Unorm,
+            R8Snorm,
+            Rg8Unorm,
+            Rg8Snorm,
             Rgba8Unorm,
             Rgba8UnormSrgb,
             Rgba16Float,
             Rgba32Float,
+            Bgr8Unorm,
             Bgra8Unorm,
             Bgra8UnormSrgb,
             Bgra4Unorm,
             /// DXT1
             BC1RgbaUnorm,
-            /// DXT1
             BC1RgbaUnormSrgb,
             /// DXT3
             BC2RgbaUnorm,
-            /// DXT3
             BC2RgbaUnormSrgb,
             /// DXT5
             BC3RgbaUnorm,
-            /// DXT5
             BC3RgbaUnormSrgb,
             /// RGTC1
             BC4RUnorm,
-            /// RGTC1
             BC4RSnorm,
             /// RGTC2
             BC5RgUnorm,
-            /// RGTC2
             BC5RgSnorm,
             /// BPTC (float)
             BC6hRgbUfloat,
-            /// BPTC (float)
             BC6hRgbSfloat,
             /// BPTC (unorm)
             BC7RgbaUnorm,
-            /// BPTC (unorm)
             BC7RgbaUnormSrgb,
+            Rgba8Snorm,
+            R16Unorm,
+            R16Snorm,
+            Rg16Unorm,
+            Rg16Snorm,
+            Rgba16Unorm,
+            Rgba16Snorm,
+            R16Float,
+            Rg16Float,
+            R32Float,
+            Rg32Float,
+            Rgb32Float,
+            Bgr5A1Unorm,
         }
 
         public enum Quality
