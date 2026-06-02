@@ -203,6 +203,8 @@ namespace ImageLibrary
             { TextureFormat.BGRA8_UNORM,   new Rgba(8, 8, 8, 8) { ChannelOrder = "BGRA" } },
             { TextureFormat.BGRA8_SRGB,    new Rgba(8, 8, 8, 8) { ChannelOrder = "BGRA" } },
 
+            { TextureFormat.RGBB10A2_UNORM,    new R10B10G10A2() },
+
             { TextureFormat.D16_UNORM,  new Rgba(16) },
 
             // Signed formats
@@ -222,6 +224,8 @@ namespace ImageLibrary
             { TextureFormat.RG16_FLOAT,     new Rgba(16, 16) { IsFloat = true } },
             { TextureFormat.RGBA32_FLOAT,     new Rgba(32,32,32,32) { IsFloat = true } },
             { TextureFormat.R16_UNORM,     new Rgba(16) { ChannelOrder = "RRR" } },
+            { TextureFormat.RG16_UNORM,      new Rgba(16,16) },
+            { TextureFormat.RGBA16_UNORM,      new Rgba(16,16,16,16) },
 
             { TextureFormat.RGBA16_FLOAT,     new Rgba16F()},
 
