@@ -26,11 +26,11 @@ namespace ImageLibrary.Test
             Directory.CreateDirectory(OUTPUT_FOLDER);
 
             GenericTextureBase textureBase = new();
-            textureBase.ImageFormat = new ImageFormat(TextureFormat.BC1_UNORM);
-            textureBase.PlatformSwizzle = new PlatformSwizzle.PlatformSwizzleWiiU(WiiU.GX2.GX2SurfaceFormat.T_BC1_UNORM)
+            textureBase.ImageFormat = new ImageFormat(TextureFormat.RGBA8_SRGB);
+         /*   textureBase.PlatformSwizzle = new PlatformSwizzle.PlatformSwizzleWiiU(WiiU.GX2.GX2SurfaceFormat.T_BC1_UNORM)
             {
                 SurfaceDimension = WiiU.GX2.GX2SurfaceDimension.DIM_CUBE,   
-            };
+            };*/
             textureBase.Import(CUBEMAP_FILE, new ImportSettings()
             {
                 CrossCubemap = true, MipCount = 2,

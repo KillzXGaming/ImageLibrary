@@ -175,7 +175,9 @@ namespace ImageLibrary.Formats.Encoders
                 case BcnFormats.BC2: encoder.OutputOptions.Format = CompressionFormat.Bc2; break;
                 case BcnFormats.BC3: encoder.OutputOptions.Format = CompressionFormat.Bc3; break;
                 case BcnFormats.BC4: encoder.OutputOptions.Format = CompressionFormat.Bc4; break;
-                case BcnFormats.BC5: encoder.OutputOptions.Format = IsSnorm ? CompressionFormat.Bc5S : CompressionFormat.Bc5; break;
+                case BcnFormats.BC4S: encoder.OutputOptions.Format = CompressionFormat.Bc4S; break;
+                case BcnFormats.BC5: encoder.OutputOptions.Format = CompressionFormat.Bc5; break;
+                case BcnFormats.BC5S: encoder.OutputOptions.Format = CompressionFormat.Bc5S; break;
                 case BcnFormats.BC6: encoder.OutputOptions.Format = CompressionFormat.Bc6S; break;
                 case BcnFormats.BC7: encoder.OutputOptions.Format = CompressionFormat.Bc7; break;
             }
