@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ImageLibrary.Cubemaps
+namespace ImageLibrary.Utils
 {
     public class CrossCubemapConverter
     {

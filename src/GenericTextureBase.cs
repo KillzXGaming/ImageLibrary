@@ -1,5 +1,5 @@
 ﻿using BCnEncoder.Shared;
-using ImageLibrary.Cubemaps;
+using ImageLibrary.Utils;
 using ImageLibrary.Formats.Encoders;
 using ImageLibrary.Interfaces;
 using ImageLibrary.PlatformSwizzle;
@@ -145,6 +145,11 @@ namespace ImageLibrary
         public EventHandler OnRequestEditorUpdate;
 
         /// <summary>
+        /// 
+        /// </summary>
+        public EventHandler OnRemoved;
+
+        /// <summary>
         /// Object instance for render attachment
         /// </summary>
         public object RenderHandle;
@@ -214,15 +219,17 @@ namespace ImageLibrary
             return SizeUtil.GetFileSize(this.Data.Length);
         }
 
+        public virtual bool IsCustomImport(string path)
+            => path.EndsWith(".dds") || path.EndsWith(".dds2") || path.EndsWith(".astc");
 
         /// <summary>
         /// Imports a file based on the file extension.
         /// </summary>
         /// <param name="filePath"></param>
-        public void Import(string filePath, ImportSettings settings = null)
+        public virtual void Import(string filePath, ImportSettings settings = null)
         {
             if (filePath.EndsWith(".dds"))
-                Import(new DDS(filePath));
+                Import(new DdsFile(filePath));
             else if (filePath.EndsWith(".astc"))
                 Import(new AstcFile(filePath));
             else
@@ -235,7 +242,7 @@ namespace ImageLibrary
         /// <param name="image"></param>
         /// <param name="mipCount"></param>
         /// <returns></returns>
-        public bool Import(Image<Rgba32> image, ImportSettings settings = null)
+        public virtual bool Import(Image<Rgba32> image, ImportSettings settings = null)
         {
             settings ??= new ImportSettings();
 
@@ -320,7 +327,7 @@ namespace ImageLibrary
         /// Returns false if file is not supported or fails.
         /// </summary>
         /// <param name="dds"></param>
-        public bool Import(DDS dds)
+        public bool Import(DdsFile dds)
         {
             if (!this.IsFormatSupported(dds.Format))
                 return false;
@@ -408,7 +415,25 @@ namespace ImageLibrary
         /// Gets a list of supported file extensions
         /// </summary>
         /// <returns></returns>
-        public virtual List<(string desc, string ext)> GetSupportedFileFilters()
+        public virtual List<(string desc, string ext)> GetSupportedImportFileFilters()
+        {
+            List<(string, string)> filters = new();
+            filters.Add(("Portable Network Graphics", ".png"));
+            filters.Add(("Direct Draw Surface", ".dds"));
+            filters.Add(("Joint Photographic Experts Group", ".jpg"));
+            filters.Add(("Bitmap Image", ".bmp"));
+            filters.Add(("Tagged Image File Format", ".tiff"));
+            filters.Add(("TGA", ".tga"));
+            filters.Add(("Graphics Interchange Format", ".gif"));
+            filters.Add(("Portable Bitmap file", ".pbm"));
+            return filters;
+        }
+
+        /// <summary>
+        /// Gets a list of supported file extensions
+        /// </summary>
+        /// <returns></returns>
+        public virtual List<(string desc, string ext)> GetSupportedExportFileFilters()
         {
             List<(string, string)> filters = new();
             filters.Add(("Portable Network Graphics", ".png"));
@@ -489,7 +514,7 @@ namespace ImageLibrary
         /// <param name="path"></param>
         public void ExportDDS(string path)
         {
-            DDS dds = new DDS(false);
+            DdsFile dds = new DdsFile(false);
             dds.MainHeader.Width = this.Width;
             dds.MainHeader.Height = this.Height;
             dds.MainHeader.Depth = this.Depth;
@@ -499,7 +524,7 @@ namespace ImageLibrary
             dds.Format = this.ImageFormat.GetDDSFormat();
 
             // Format may need decoding if RGBA8, apply raw rgba surfaces
-            if (dds.Format == DDS.DXGI_FORMAT.DXGI_FORMAT_R8G8B8A8_UNORM)
+            if (dds.Format == DdsFile.DXGI_FORMAT.DXGI_FORMAT_R8G8B8A8_UNORM)
                 dds.ImageData = ImageUtil.DecodeAllSurfaces(this, dds.ImageData);
 
             dds.MainHeader.PitchOrLinearSize = (uint)dds.ImageData.Length / this.Depth;
@@ -514,7 +539,7 @@ namespace ImageLibrary
         /// <param name="path"></param>
         /// <param name="arrayLevel"></param>
         /// <param name="mipLevel"></param>
-        public void Export(string path, ExportSettings settings = null)
+        public virtual void Export(string path, ExportSettings settings = null)
         {
             settings ??= new ExportSettings();
 
@@ -565,7 +590,7 @@ namespace ImageLibrary
         /// </summary>
         /// <param name="format"></param>
         /// <returns></returns>
-        public bool IsFormatSupported(DDS.DXGI_FORMAT format) {
+        public bool IsFormatSupported(DdsFile.DXGI_FORMAT format) {
             return IsFormatSupported(new ImageFormat(format));
         }
 

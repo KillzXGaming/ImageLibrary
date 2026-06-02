@@ -153,25 +153,25 @@ namespace ImageLibrary
         /// If RGBA8, the format will be decoded to match.
         /// </summary>
         /// <returns></returns>
-        public DDS.DXGI_FORMAT GetDDSFormat()
+        public DdsFile.DXGI_FORMAT GetDDSFormat()
         {
-            return DDS.DXGI_FORMAT.DXGI_FORMAT_R8G8B8A8_UNORM;
+            return DdsFile.DXGI_FORMAT.DXGI_FORMAT_R8G8B8A8_UNORM;
 
             switch (this.Format)
             {
                 case PICATextureFormat.L8:
-                    return DDS.DXGI_FORMAT.DXGI_FORMAT_R8_UNORM;
+                    return DdsFile.DXGI_FORMAT.DXGI_FORMAT_R8_UNORM;
                 case PICATextureFormat.RGBA8:
                 case PICATextureFormat.RGB8:
-                    return DDS.DXGI_FORMAT.DXGI_FORMAT_R8G8B8A8_UNORM;
+                    return DdsFile.DXGI_FORMAT.DXGI_FORMAT_R8G8B8A8_UNORM;
                 case PICATextureFormat.RGB565:
-                    return DDS.DXGI_FORMAT.DXGI_FORMAT_B5G6R5_UNORM;
+                    return DdsFile.DXGI_FORMAT.DXGI_FORMAT_B5G6R5_UNORM;
                 case PICATextureFormat.RGBA5551:
-                    return DDS.DXGI_FORMAT.DXGI_FORMAT_B5G5R5A1_UNORM;
+                    return DdsFile.DXGI_FORMAT.DXGI_FORMAT_B5G5R5A1_UNORM;
                 case PICATextureFormat.LA8:
-                    return DDS.DXGI_FORMAT.DXGI_FORMAT_R8G8_UNORM;
+                    return DdsFile.DXGI_FORMAT.DXGI_FORMAT_R8G8_UNORM;
                 default:
-                    return DDS.DXGI_FORMAT.DXGI_FORMAT_R8G8B8A8_UNORM;
+                    return DdsFile.DXGI_FORMAT.DXGI_FORMAT_R8G8B8A8_UNORM;
             }
         }
 

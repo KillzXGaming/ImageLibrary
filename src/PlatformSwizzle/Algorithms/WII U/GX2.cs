@@ -522,8 +522,8 @@ namespace ImageLibrary.WiiU
             if (TileMode == 3)
                 tilingDepth /= 4;
 
-            if (tilingDepth != 1)
-                throw new Exception($"Unsupported Depth {surfOut.depth}!");
+           // if (tilingDepth != 1)
+             //   throw new Exception($"Unsupported Depth {surfOut.depth}!");
 
             int tiling1dLevel = 0;
             bool tiling1dLevelSet = false;
@@ -536,48 +536,52 @@ namespace ImageLibrary.WiiU
 
             uint Splice = 0;
 
-            for (int mipLevel = 0; mipLevel < MipCount; mipLevel++)
+            for (int arrayLevel = 0; arrayLevel < Depth; arrayLevel++)
             {
-                var result = TextureHelper.GetCurrentMipSize(Width, Height, blkWidth, blkHeight, bpp, mipLevel);
-
-                uint offset = result.Item1;
-                uint size = result.Item2;
-
-                byte[] data_ = new byte[size];
-                Array.Copy(imageData, offset, data_, 0, size);
-
-                uint width_ = Math.Max(1, Width >> mipLevel);
-                uint height_ = Math.Max(1, Height >> mipLevel);
-
-                if (mipLevel != 0)
+                surfOut = getSurfaceInfo((GX2SurfaceFormat)Format, Width, Height, Depth, SurfaceDim, TileMode, AAMode, 0);
+                for (int mipLevel = 0; mipLevel < MipCount; mipLevel++)
                 {
-                    surfOut = GX2.getSurfaceInfo((GX2SurfaceFormat)Format, Width, Height, 1, 1, TileMode, 0, mipLevel);
+                    var result = TextureHelper.GetCurrentMipSize(Width, Height, blkWidth, blkHeight, bpp, mipLevel);
 
-                    if (mipLevel == 1)
-                        mipOffsets.Add(imageSize);
-                    else
-                        mipOffsets.Add(mipSize);
+                    uint offset = result.Item1;
+                    uint size = result.Item2;
+
+                    byte[] data_ = new byte[size];
+                    Array.Copy(imageData, offset, data_, 0, size);
+
+                    uint width_ = Math.Max(1, Width >> mipLevel);
+                    uint height_ = Math.Max(1, Height >> mipLevel);
+
+                    if (mipLevel != 0)
+                    {
+                        surfOut = GX2.getSurfaceInfo((GX2SurfaceFormat)Format, Width, Height, 1, 1, TileMode, 0, mipLevel);
+
+                        if (mipLevel == 1)
+                            mipOffsets.Add(imageSize);
+                        else
+                            mipOffsets.Add(mipSize);
+                    }
+
+                    data_ = ByteUtil.CombineByteArray(data_, new byte[surfOut.surfSize - size]);
+                    byte[] dataAlignBytes = new byte[RoundUp(mipSize, surfOut.baseAlign) - mipSize];
+
+                    if (mipLevel != 0)
+                        mipSize += (uint)(surfOut.surfSize + dataAlignBytes.Length);
+
+                    byte[] SwizzledData = GX2.swizzle(width_, height_, surfOut.depth, surfOut.height, (uint)Format, 0, 1, surfOut.tileMode, s,
+                            surfOut.pitch, surfOut.bpp, Splice, 0, data_);
+
+                    Swizzled.Add(dataAlignBytes.Concat(SwizzledData).ToArray());
+
+                    if (surfOut.tileMode == 1 || surfOut.tileMode == 2 ||
+                        surfOut.tileMode == 3 || surfOut.tileMode == 16)
+                    {
+                        tiling1dLevelSet = true;
+                    }
+
+                    if (tiling1dLevelSet == false)
+                        tiling1dLevel += 1;
                 }
-
-                data_ = ByteUtil.CombineByteArray(data_, new byte[surfOut.surfSize - size]);
-                byte[] dataAlignBytes = new byte[RoundUp(mipSize, surfOut.baseAlign) - mipSize];
-
-                if (mipLevel != 0)
-                    mipSize += (uint)(surfOut.surfSize + dataAlignBytes.Length);
-
-                byte[] SwizzledData = GX2.swizzle(width_, height_, surfOut.depth, surfOut.height, (uint)Format, 0, 1, surfOut.tileMode, s,
-                        surfOut.pitch, surfOut.bpp, Splice, 0, data_);
-
-                Swizzled.Add(dataAlignBytes.Concat(SwizzledData).ToArray());
-
-                if (surfOut.tileMode == 1 || surfOut.tileMode == 2 ||
-                    surfOut.tileMode == 3 || surfOut.tileMode == 16)
-                {
-                    tiling1dLevelSet = true;
-                }
-
-                if (tiling1dLevelSet == false)
-                    tiling1dLevel += 1;
             }
 
             if (tiling1dLevelSet)
@@ -2744,7 +2748,8 @@ namespace ImageLibrary.WiiU
                 {
                     aSurfIn.height = (uint)Math.Max(1, surfaceHeight >> level);
                     aSurfIn.numSlices = (uint)Math.Max(6, surfaceDepth);
-                    aSurfIn.flags.value |= 0x10;
+                    if (surfaceDepth == 6)
+                        aSurfIn.flags.value |= 0x10;
                 }
                 else if (dim == 4)
                 {

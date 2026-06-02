@@ -121,7 +121,7 @@ namespace ImageLibrary
         /// All raw rgba formats are palette or tile based and not directly supported
         /// </summary>
         /// <returns></returns>
-        public DDS.DXGI_FORMAT GetDDSFormat() => DDS.DXGI_FORMAT.DXGI_FORMAT_R8G8B8A8_UNORM;
+        public DdsFile.DXGI_FORMAT GetDDSFormat() => DdsFile.DXGI_FORMAT.DXGI_FORMAT_R8G8B8A8_UNORM;
 
         public static List<ImageFormatDS> GetSupportedFormats()
         {

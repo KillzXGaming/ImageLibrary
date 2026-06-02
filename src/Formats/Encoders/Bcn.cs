@@ -5,6 +5,7 @@ using ImageLibrary.Interfaces;
 using SixLabors.ImageSharp.Formats.Bmp;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -129,11 +130,32 @@ namespace ImageLibrary.Formats.Encoders
 
         public byte[] Encode(byte[] input, uint width, uint height)
         {
+            // Image dds library encoders faster, but only supported on selected platforms
+            if (ImageDds.IsSupported())
+            {
+                var quality = (ImageDds.Quality)QualityLevel;
+                ImageDds.ImageFormat format = ImageDds.ImageFormat.Rgba8Unorm;
+                switch (Format)
+                {
+                    case BcnFormats.BC1: format = ImageDds.ImageFormat.BC1RgbaUnorm; break;
+                    case BcnFormats.BC3: format = ImageDds.ImageFormat.BC3RgbaUnorm; break;
+                    case BcnFormats.BC4: format = ImageDds.ImageFormat.BC4RUnorm; break;
+                    case BcnFormats.BC4S: format = ImageDds.ImageFormat.BC4RSnorm; break;
+                    case BcnFormats.BC5: format = ImageDds.ImageFormat.BC5RgUnorm; break;
+                    case BcnFormats.BC6: format = ImageDds.ImageFormat.BC6hRgbUfloat; break;
+                    case BcnFormats.BC6S: format = ImageDds.ImageFormat.BC6hRgbSfloat; break;
+                    case BcnFormats.BC7: format = ImageDds.ImageFormat.BC7RgbaUnorm; break;
+                }
+                if (format != ImageDds.ImageFormat.Rgba8Unorm)
+                    return ImageDds.Encode(input, width, height, format, quality);
+            }
+
+            var size = CalculateSize(width, height);
+
             var encoder = new BcEncoder();
+            encoder.OutputOptions.GenerateMipMaps = false;
             encoder.OutputOptions.Format = CompressionFormat.Bc1;
             encoder.OutputOptions.Quality = CompressionQuality.Fast;
-
-            var quality = (ImageDds.Quality)QualityLevel;
 
             //BC5 RRRG
             if (Format == BcnFormats.BC5 && IsAlpha)
@@ -147,35 +169,13 @@ namespace ImageLibrary.Formats.Encoders
                 encoder.InputOptions.Bc4Component = ColorComponent.A;
             }
 
-
-            // BC5 Snorm is not supported by BcnEncoder, use in tool method
-            // Image dds library encoders faster, but only supported on selected platforms
-            if (ImageDds.IsSupported())
-            {
-                ImageDds.ImageFormat format = ImageDds.ImageFormat.Rgba8Unorm;
-                switch (Format)
-                {
-                    case BcnFormats.BC1: format = ImageDds.ImageFormat.BC1RgbaUnorm; break;
-                    case BcnFormats.BC3: format = ImageDds.ImageFormat.BC3RgbaUnorm; break;
-                    case BcnFormats.BC4: format = ImageDds.ImageFormat.BC4RUnorm; break;
-                    case BcnFormats.BC4S: format = ImageDds.ImageFormat.BC4RSnorm; break;
-                    case BcnFormats.BC5: format = ImageDds.ImageFormat.BC5RgUnorm; break;
-                    case BcnFormats.BC5S: format = ImageDds.ImageFormat.BC5RgSnorm; break;
-                    case BcnFormats.BC6: format = ImageDds.ImageFormat.BC6hRgbUfloat; break;
-                    case BcnFormats.BC6S: format = ImageDds.ImageFormat.BC6hRgbSfloat; break;
-                    case BcnFormats.BC7: format = ImageDds.ImageFormat.BC7RgbaUnorm; break;
-                }
-                if (format != ImageDds.ImageFormat.Rgba8Unorm)
-                    return ImageDds.Encode(input, width, height, format, quality);
-            }
-
             switch (Format)
             {
                 case BcnFormats.BC1: encoder.OutputOptions.Format = CompressionFormat.Bc1; break;
                 case BcnFormats.BC2: encoder.OutputOptions.Format = CompressionFormat.Bc2; break;
                 case BcnFormats.BC3: encoder.OutputOptions.Format = CompressionFormat.Bc3; break;
                 case BcnFormats.BC4: encoder.OutputOptions.Format = CompressionFormat.Bc4; break;
-                case BcnFormats.BC5: encoder.OutputOptions.Format = CompressionFormat.Bc5; break;
+                case BcnFormats.BC5: encoder.OutputOptions.Format = IsSnorm ? CompressionFormat.Bc5S : CompressionFormat.Bc5; break;
                 case BcnFormats.BC6: encoder.OutputOptions.Format = CompressionFormat.Bc6S; break;
                 case BcnFormats.BC7: encoder.OutputOptions.Format = CompressionFormat.Bc7; break;
             }

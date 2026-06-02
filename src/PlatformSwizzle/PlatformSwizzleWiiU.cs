@@ -121,7 +121,7 @@ namespace ImageLibrary.PlatformSwizzle
             surf.bpp = bpp;
             surf.height = texture.Height;
             surf.width = texture.Width;
-            surf.depth = texture.ArrayCount;
+            surf.depth = texture.Depth;
             surf.alignment = Alignment;
             surf.aa = (uint)AAMode;
             surf.dim = (uint)SurfaceDimension;
@@ -137,6 +137,33 @@ namespace ImageLibrary.PlatformSwizzle
             surf.swizzle = SwizzleValue;
 
             return GX2.Decode(surf, arrayLevel, mipLevel);
+        }
+
+        public GX2.GX2Surface ToGx2(GenericTextureBase texture)
+        {
+            uint bpp = texture.ImageFormat.GetBytesPerPixel();
+
+            GX2.GX2Surface surf = new GX2.GX2Surface();
+            surf.bpp = bpp;
+            surf.height = texture.Height;
+            surf.width = texture.Width;
+            surf.depth = texture.Depth;
+            surf.numArray = texture.ArrayCount;
+            surf.alignment = Alignment;
+            surf.aa = (uint)AAMode;
+            surf.dim = (uint)SurfaceDimension;
+            surf.format = (uint)GX2Format;
+            surf.use = (uint)SurfaceUse;
+            surf.pitch = Pitch;
+            surf.data = texture.Data.ToArray();
+            surf.mipData = MipData != null ? MipData : texture.Data.ToArray();
+            surf.mipOffset = MipOffsets != null ? MipOffsets : new uint[0];
+            surf.numMips = texture.MipCount;
+            surf.numArray = texture.ArrayCount;
+            surf.tileMode = (uint)TileMode;
+            surf.swizzle = SwizzleValue;
+            surf.compSel = new byte[] { 0, 1, 2, 3 };
+            return surf;
         }
 
         public override byte[] DeswizzleAllSurfaces(GenericTextureBase texture)
@@ -168,7 +195,6 @@ namespace ImageLibrary.PlatformSwizzle
         public override byte[] SwizzleAllSurfaces(GenericTextureBase texture, byte[] imageData)
         {
             SwizzleValue = 0;
-
             //Swizzle and create surface
             var NewSurface = GX2.CreateGx2Texture(imageData, texture.Name,
                 (uint)TileMode,
@@ -195,6 +221,10 @@ namespace ImageLibrary.PlatformSwizzle
             { GX2.GX2SurfaceFormat.TCS_R8_G8_B8_A8_UNORM, TextureFormat.RGBA8_UNORM },
             { GX2.GX2SurfaceFormat.TCS_R8_G8_B8_A8_SRGB, TextureFormat.RGBA8_SRGB },
 
+            { GX2.GX2SurfaceFormat.TC_R8_SNORM, TextureFormat.R8_SNORM },
+            { GX2.GX2SurfaceFormat.TC_R8_G8_SNORM, TextureFormat.RG8_SNORM },
+            { GX2.GX2SurfaceFormat.TC_R8_G8_B8_A8_SNORM, TextureFormat.RGBA8_SNORM },
+
             { GX2.GX2SurfaceFormat.TC_R4_G4_B4_A4_UNORM, TextureFormat.RGBA4_UNORM },
             { GX2.GX2SurfaceFormat.T_R4_G4_UNORM, TextureFormat.RG4_UNORM },
             { GX2.GX2SurfaceFormat.TC_R5_G5_B5_A1_UNORM, TextureFormat.RGB5A1_UNORM },
@@ -217,5 +247,13 @@ namespace ImageLibrary.PlatformSwizzle
             { GX2.GX2SurfaceFormat.T_BC5_UNORM, TextureFormat.BC5_UNORM },
             { GX2.GX2SurfaceFormat.T_BC5_SNORM, TextureFormat.BC5_SNORM },
         };
+
+        public static List<IImageFormat> GetSupportedFormats()
+        {
+            List<IImageFormat> formats = new();
+            foreach (var v in GX2FormatList.Values)
+                formats.Add(new ImageFormat(v));
+            return formats;
+        }
     }
 }

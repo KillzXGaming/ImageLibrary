@@ -2,7 +2,6 @@
 using BCnEncoder.Shared;
 using ImageLibrary.Helpers;
 using ImageLibrary.Interfaces;
-using ImageLibrary.Native;
 using Ryujinx.Graphics.Gal.Texture;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;

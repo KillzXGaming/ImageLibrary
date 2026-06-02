@@ -8,14 +8,13 @@ using System.Reflection.PortableExecutable;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using Toolbox.Core;
 
 namespace ImageLibrary
 {
     /// <summary>
     /// Represents an DDS file binary format.
     /// </summary>
-    public class DDS
+    public class DdsFile
     {
         #region Constants
 
@@ -348,7 +347,7 @@ namespace ImageLibrary
             }
         }
 
-        public DDS(bool isDxt10 = false) {
+        public DdsFile(bool isDxt10 = false) {
 
             MainHeader = new Header();
             PfHeader = new DDSPFHeader();
@@ -370,8 +369,8 @@ namespace ImageLibrary
             PfHeader.Caps1 = (uint)DDSCAPS.TEXTURE;
         }
 
-        public DDS(string filePath) { Load(filePath); }
-        public DDS(Stream stream) { Load(stream); }
+        public DdsFile(string filePath) { Load(filePath); }
+        public DdsFile(Stream stream) { Load(stream); }
 
 
         public void Load(string fileName)
@@ -602,7 +601,7 @@ namespace ImageLibrary
                 case DXGI_FORMAT.DXGI_FORMAT_BC7_UNORM_SRGB:
                     PfHeader.Flags = (uint)DDPF.FOURCC;
                     PfHeader.FourCC = FOURCC_DX10;
-                    Dx10Header.DxgiFormat = (uint)DDS.DXGI_FORMAT.DXGI_FORMAT_BC7_UNORM;
+                    Dx10Header.DxgiFormat = (uint)DdsFile.DXGI_FORMAT.DXGI_FORMAT_BC7_UNORM;
                     break;
                 default:
                     PfHeader.Flags = (uint)DDPF.FOURCC;
@@ -774,6 +773,122 @@ namespace ImageLibrary
                 byte[] Components = new byte[4] { 0, 1, 2, 3 };
                 this.Format = DDS_RGBA.GetUncompressedType(this, Components, IsRGB, HasAlpha, HasLuminance, PfHeader);
             }
+        }
+    }
+
+    public class DDS_RGBA
+    {
+        // RGBA Masks
+        private static int[] A1R5G5B5_MASKS = { 0x7C00, 0x03E0, 0x001F, 0x8000 };
+        private static int[] X1R5G5B5_MASKS = { 0x7C00, 0x03E0, 0x001F, 0x0000 };
+        private static int[] A4R4G4B4_MASKS = { 0x0F00, 0x00F0, 0x000F, 0xF000 };
+        private static int[] X4R4G4B4_MASKS = { 0x0F00, 0x00F0, 0x000F, 0x0000 };
+        private static int[] R5G6B5_MASKS = { 0xF800, 0x07E0, 0x001F, 0x0000 };
+        private static int[] R8G8B8_MASKS = { 0xFF0000, 0x00FF00, 0x0000FF, 0x000000 };
+        private static uint[] A8B8G8R8_MASKS = { 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000 };
+        private static int[] X8B8G8R8_MASKS = { 0x000000FF, 0x0000FF00, 0x00FF0000, 0x00000000 };
+        private static uint[] A8R8G8B8_MASKS = { 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000 };
+        private static int[] X8R8G8B8_MASKS = { 0x00FF0000, 0x0000FF00, 0x000000FF, 0x00000000 };
+
+        private static int[] RG8_MASKS = { 0x000000FF, 0x0000, 0x0000, };
+        private static int[] RG8_SIGNED_MASKS = { 0x000000FF, 0x0000FF00, 0x0000, };
+
+        private static int[] L8_MASKS = { 0x000000FF, 0x0000, };
+        private static int[] A8L8_MASKS = { 0x000000FF, 0x0F00, };
+
+        public static DdsFile.DXGI_FORMAT GetUncompressedType(DdsFile dds, byte[] Components, bool IsRGB, bool HasAlpha, bool HasLuminance, DdsFile.DDSPFHeader header)
+        {
+            uint bpp = header.RgbBitCount;
+            uint RedMask = header.RBitMask;
+            uint GreenMask = header.GBitMask;
+            uint BlueMask = header.BBitMask;
+            uint AlphaMask = HasAlpha ? header.ABitMask : 0;
+
+            if (HasLuminance)
+            {
+                if (header.ABitMask != 0)
+                    return DdsFile.DXGI_FORMAT.DXGI_FORMAT_A8_UNORM;
+
+                return DdsFile.DXGI_FORMAT.DXGI_FORMAT_R8_UNORM;
+            }
+            else
+            {
+                if (bpp == 16)
+                {
+                    if (RedMask == A1R5G5B5_MASKS[0] && GreenMask == A1R5G5B5_MASKS[1] && BlueMask == A1R5G5B5_MASKS[2] && AlphaMask == A1R5G5B5_MASKS[3])
+                    {
+                        return DdsFile.DXGI_FORMAT.DXGI_FORMAT_B5G5R5A1_UNORM;
+                    }
+                    else if (RedMask == X1R5G5B5_MASKS[0] && GreenMask == X1R5G5B5_MASKS[1] && BlueMask == X1R5G5B5_MASKS[2] && AlphaMask == X1R5G5B5_MASKS[3])
+                    {
+                        return DdsFile.DXGI_FORMAT.DXGI_FORMAT_B5G5R5A1_UNORM;
+                    }
+                    else if (RedMask == A4R4G4B4_MASKS[0] && GreenMask == A4R4G4B4_MASKS[1] && BlueMask == A4R4G4B4_MASKS[2] && AlphaMask == A4R4G4B4_MASKS[3])
+                    {
+                        return DdsFile.DXGI_FORMAT.DXGI_FORMAT_B4G4R4A4_UNORM;
+                    }
+                    else if (RedMask == X4R4G4B4_MASKS[0] && GreenMask == X4R4G4B4_MASKS[1] && BlueMask == X4R4G4B4_MASKS[2] && AlphaMask == X4R4G4B4_MASKS[3])
+                    {
+                        return DdsFile.DXGI_FORMAT.DXGI_FORMAT_B4G4R4A4_UNORM;
+                    }
+                    else if (RedMask == R5G6B5_MASKS[0] && GreenMask == R5G6B5_MASKS[1] && BlueMask == R5G6B5_MASKS[2] && AlphaMask == R5G6B5_MASKS[3])
+                    {
+                        return DdsFile.DXGI_FORMAT.DXGI_FORMAT_B5G6R5_UNORM;
+                    }
+                    else if (RedMask == RG8_MASKS[0] && GreenMask == RG8_MASKS[1] && BlueMask == RG8_MASKS[2])
+                    {
+                        return DdsFile.DXGI_FORMAT.DXGI_FORMAT_R8G8_UNORM;
+                    }
+                    else if (RedMask == RG8_SIGNED_MASKS[0] && GreenMask == RG8_SIGNED_MASKS[1] && BlueMask == RG8_SIGNED_MASKS[2])
+                    {
+                        return DdsFile.DXGI_FORMAT.DXGI_FORMAT_R8G8_SNORM;
+                    }
+                    else
+                    {
+                        throw new Exception("Unsupported 16 bit image!");
+                    }
+                }
+                else if (bpp == 24)
+                {
+                    if (RedMask == R8G8B8_MASKS[0] && GreenMask == R8G8B8_MASKS[1] && BlueMask == R8G8B8_MASKS[2] && AlphaMask == R8G8B8_MASKS[3])
+                    {
+                        return DdsFile.DXGI_FORMAT.DXGI_FORMAT_B8G8R8X8_UNORM;
+                    }
+                    else
+                    {
+                        throw new Exception("Unsupported 24 bit image!");
+                    }
+                }
+                else if (bpp == 32)
+                {
+                    if (RedMask == A8B8G8R8_MASKS[0] && GreenMask == A8B8G8R8_MASKS[1] && BlueMask == A8B8G8R8_MASKS[2] && AlphaMask == A8B8G8R8_MASKS[3])
+                    {
+                        return DdsFile.DXGI_FORMAT.DXGI_FORMAT_R8G8B8A8_UNORM;
+                    }
+                    else if (RedMask == X8B8G8R8_MASKS[0] && GreenMask == X8B8G8R8_MASKS[1] && BlueMask == X8B8G8R8_MASKS[2] && AlphaMask == X8B8G8R8_MASKS[3])
+                    {
+                        //dds.bdata = ConvertToRgba(this, "RGB8X", 4, new byte[4] { 2, 1, 0, 3 });
+                        return DdsFile.DXGI_FORMAT.DXGI_FORMAT_B8G8R8X8_UNORM_SRGB;
+                    }
+                    else if (RedMask == A8R8G8B8_MASKS[0] && GreenMask == A8R8G8B8_MASKS[1] && BlueMask == A8R8G8B8_MASKS[2] && AlphaMask == A8R8G8B8_MASKS[3])
+                    {
+                        return DdsFile.DXGI_FORMAT.DXGI_FORMAT_B8G8R8A8_UNORM;
+                    }
+                    else if (RedMask == X8R8G8B8_MASKS[0] && GreenMask == X8R8G8B8_MASKS[1] && BlueMask == X8R8G8B8_MASKS[2] && AlphaMask == X8R8G8B8_MASKS[3])
+                    {
+                        return DdsFile.DXGI_FORMAT.DXGI_FORMAT_R8G8B8A8_UNORM;
+                    }
+                    else
+                    {
+                        throw new Exception("Unsupported 32 bit image!");
+                    }
+                }
+            }
+            /*  else
+              {
+                  throw new Exception("Unknown type!");
+              }*/
+            return DdsFile.DXGI_FORMAT.DXGI_FORMAT_R8G8B8A8_UNORM;
         }
     }
 }

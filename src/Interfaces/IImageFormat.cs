@@ -86,7 +86,7 @@ namespace ImageLibrary
         /// Gets the corresponding DXGI format used in DDS files for this image format.
         /// If the format is RGBA8, it will attempt to decode as RGBA8 incase the format is not supported by DDS.
         /// </summary>
-        /// <returns>A <see cref="DDS.DXGI_FORMAT"/> value representing the format.</returns>
-        DDS.DXGI_FORMAT GetDDSFormat();
+        /// <returns>A <see cref="DdsFile.DXGI_FORMAT"/> value representing the format.</returns>
+        DdsFile.DXGI_FORMAT GetDDSFormat();
     }
 }

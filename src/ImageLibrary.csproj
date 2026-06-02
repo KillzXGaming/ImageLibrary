@@ -9,7 +9,6 @@
 
   <ItemGroup>
     <PackageReference Include="AstcEncoderCSharp" Version="5.4.3" />
-    <PackageReference Include="BCnEncoder.Net" Version="2.2.1" />
     <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.4.2" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
   </ItemGroup>
@@ -23,30 +22,35 @@
     <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
 	    <DefineConstants>$(DefineConstants);OSX</DefineConstants>
     </PropertyGroup>
+    <ItemGroup>
+      <Reference Include="BCnEncoder">
+        <HintPath>..\external\BCnEncoder.dll</HintPath>
+      </Reference>
+    </ItemGroup>
 	
   <ItemGroup>
-    <None Update="image_dds.dll">
+    <None Update="Externals\image_dds.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="libimage_dds.so">
+    <None Update="Externals\libimage_dds.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="libRG_ETC1.so">
+    <None Update="Externals\libRG_ETC1.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="libtegra_swizzle.so">
+    <None Update="Externals\libtegra_swizzle.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RG_ETC1.dll">
+    <None Update="Externals\RG_ETC1.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="RG_ETC1.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="tegra_swizzle_x64.dll">
+    <None Update="Externals\tegra_swizzle_x64.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="tegra_swizzle_x86.dll">
+    <None Update="Externals\tegra_swizzle_x86.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

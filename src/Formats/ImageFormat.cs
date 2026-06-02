@@ -47,7 +47,7 @@ namespace ImageLibrary
             _name = encoder.ToString();
         }
 
-        public ImageFormat(DDS.DXGI_FORMAT dxgiFormat)
+        public ImageFormat(DdsFile.DXGI_FORMAT dxgiFormat)
         {
             _format = (TextureFormat)dxgiFormat;
             if (!Encoders.ContainsKey(_format))
@@ -75,7 +75,7 @@ namespace ImageLibrary
         /// </summary>
         /// <param name="dxgiFormat"></param>
         /// <returns></returns>
-        public static bool IsEncoderSupported(DDS.DXGI_FORMAT dxgiFormat) {
+        public static bool IsEncoderSupported(DdsFile.DXGI_FORMAT dxgiFormat) {
             return Encoders.ContainsKey((TextureFormat)dxgiFormat);
         }
 
@@ -139,7 +139,7 @@ namespace ImageLibrary
         /// If RGBA8, the format will be decoded to match.
         /// </summary>
         /// <returns></returns>
-        public DDS.DXGI_FORMAT GetDDSFormat() => (DDS.DXGI_FORMAT)_format; 
+        public DdsFile.DXGI_FORMAT GetDDSFormat() => (DdsFile.DXGI_FORMAT)_format; 
         /// <summary>
         /// The format enum value used.
         /// </summary>
