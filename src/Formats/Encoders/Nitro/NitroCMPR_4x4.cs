@@ -1,5 +1,4 @@
 ﻿using ImageLibrary.Formats.Encoders.Gcn;
-using ImageLibrary.PlatformSwizzle.Algorithms.Nitro;
 using System;
 using System.Collections.Generic;
 using System.Linq;

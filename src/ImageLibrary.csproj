@@ -28,31 +28,11 @@
       </Reference>
     </ItemGroup>
 	
-  <ItemGroup>
-    <None Update="Externals\image_dds.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Externals\libimage_dds.so">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Externals\libRG_ETC1.so">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Externals\libtegra_swizzle.so">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Externals\RG_ETC1.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="RG_ETC1.so">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Externals\tegra_swizzle_x64.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Externals\tegra_swizzle_x86.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+	<ItemGroup>
+	  <None Update="Externals\*.*">
+		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		<TargetPath>%(Filename)%(Extension)</TargetPath>
+	  </None>
+	</ItemGroup>
 
 </Project>

@@ -1,5 +1,4 @@
-﻿using BCnEncoder.Shared;
-using ImageLibrary.Formats.Encoders.Gcn;
+﻿using ImageLibrary.Formats.Encoders.Gcn;
 using Microsoft.CodeCoverage.Core.Reports.Coverage;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SixLabors.ImageSharp;
@@ -27,27 +26,31 @@ namespace ImageLibrary.Test
             Directory.CreateDirectory(OUTPUT_FOLDER);
 
             GenericTextureBase textureBase = new();
-            textureBase.ImageFormat = new ImageFormat(TextureFormat.RGBA8_UNORM);
-            textureBase.PlatformSwizzle = new PlatformSwizzle.PlatformSwizzleSwitch();
+            textureBase.ImageFormat = new ImageFormat(TextureFormat.BC1_UNORM);
+            textureBase.PlatformSwizzle = new PlatformSwizzle.PlatformSwizzleWiiU(WiiU.GX2.GX2SurfaceFormat.T_BC1_UNORM)
+            {
+                SurfaceDimension = WiiU.GX2.GX2SurfaceDimension.DIM_CUBE,   
+            };
             textureBase.Import(CUBEMAP_FILE, new ImportSettings()
             {
                 CrossCubemap = true, MipCount = 2,
             });
             // Slice inject test
-            textureBase.ImportSlices(IMG_FILE, array:0, depth:0, mip:1);
+          //  textureBase.ImportSlices(IMG_FILE, array:0, depth:0, mip:1);
             textureBase.ExportDDS(Path.Combine(OUTPUT_FOLDER, $"CUBEMAP_switch.dds"));
         }
-        /*
+        
         [TestMethod]
-        [DataRow(DDS.DXGI_FORMAT.DXGI_FORMAT_BC1_UNORM)]
-        [DataRow(DDS.DXGI_FORMAT.DXGI_FORMAT_BC2_UNORM)]
-        [DataRow(DDS.DXGI_FORMAT.DXGI_FORMAT_BC3_UNORM)]
-        [DataRow(DDS.DXGI_FORMAT.DXGI_FORMAT_BC4_UNORM)]
-        [DataRow(DDS.DXGI_FORMAT.DXGI_FORMAT_BC4_SNORM)]
-        [DataRow(DDS.DXGI_FORMAT.DXGI_FORMAT_BC5_UNORM)]
-        [DataRow(DDS.DXGI_FORMAT.DXGI_FORMAT_BC5_SNORM)]
-        [DataRow(DDS.DXGI_FORMAT.DXGI_FORMAT_BC7_UNORM)]
-        public void TestEncodeBCN(DDS.DXGI_FORMAT format)
+        [DataRow(DdsFile.DXGI_FORMAT.DXGI_FORMAT_BC1_UNORM)]
+        [DataRow(DdsFile.DXGI_FORMAT.DXGI_FORMAT_BC2_UNORM)]
+        [DataRow(DdsFile.DXGI_FORMAT.DXGI_FORMAT_BC3_UNORM)]
+        [DataRow(DdsFile.DXGI_FORMAT.DXGI_FORMAT_BC4_UNORM)]
+        [DataRow(DdsFile.DXGI_FORMAT.DXGI_FORMAT_BC4_SNORM)]
+        [DataRow(DdsFile.DXGI_FORMAT.DXGI_FORMAT_BC5_UNORM)]
+        [DataRow(DdsFile.DXGI_FORMAT.DXGI_FORMAT_BC5_SNORM)]
+        [DataRow(DdsFile.DXGI_FORMAT.DXGI_FORMAT_BC7_UNORM)]
+        [DataRow(DdsFile.DXGI_FORMAT.DXGI_FORMAT_R10G10B10A2_UNORM)]
+        public void TestEncodeBCN(DdsFile.DXGI_FORMAT format)
         {
             using var image = Image.Load<Rgba32>(IMG_FILE);
 
@@ -58,6 +61,8 @@ namespace ImageLibrary.Test
             textureBase.Import(image);
             textureBase.ExportDDS(Path.Combine(OUTPUT_FOLDER, $"TEST_{format}.dds"));
         }
+        
+        /*
 
         [TestMethod]
         [DataRow(TextureFormat.ASTC_4x4_UNORM)]
