@@ -340,8 +340,21 @@ namespace ImageLibrary
             this.Type = TextureType.Texture2D;
             this.ImageFormat = new ImageFormat(dds.Format);
 
-            if (dds.IsCubeMap)
+            // Cubemap array if dx10 with arrays
+            if (dds.IsCubeMap && dds.IsDX10 && dds.ArrayCount > 1)
+                this.Type = TextureType.TextureCubeArray;
+            // Cubemap 
+            else if (dds.IsCubeMap)
                 this.Type = TextureType.TextureCube;
+            // Texture 3D dim type DDS_DIMENSION_TEXTURE3D
+            else if (dds.IsDX10 && dds.Dx10Header.ResourceDim == 4)
+                this.Type = TextureType.Texture3D;
+            // Texture 3D dim type DDS_DIMENSION_TEXTURE1D
+            else if (dds.IsDX10 && dds.Dx10Header.ResourceDim == 2)
+                this.Type = TextureType.Texture1D;
+            // 2D array
+            else if(dds.ArrayCount > 1)
+                this.Type = TextureType.Texture2DArray;
 
             var swizzle = this.PlatformSwizzle.SwizzleAllSurfaces(this, dds.ImageData);
             this.Data = swizzle;
