@@ -1,16 +1,11 @@
 ﻿using ImageLibrary.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using ImageLibrary.Utils;
 using System.Numerics;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ImageLibrary.Formats.Encoders
 {
     //Based on https://github.com/FlaxEngine/FlaxEngine/blob/49eeb7bf9a3dcb4bcf373fc5281d61ffcfab7b0a/Source/Engine/Core/Math/FloatR11G11B10.cs#L20
-    public class R11G11B10 : ImageEncoder
+    public class R11G11B10 : ImageEncoder, IImageEncoderFloat
     {
         public uint BitsPerPixel => 32;
 
@@ -18,7 +13,17 @@ namespace ImageLibrary.Formats.Encoders
 
         public byte[] Decode(byte[] data, uint width, uint height)
         {
-            byte[] output = new byte[width * height * 4];
+            return ByteUtil.ConvertFloatToBytes(DecodeFloats(data, width, height));
+        }
+
+        public byte[] Encode(byte[] data, uint width, uint height)
+        {
+            return EncodeFloats(ByteUtil.ConvertBytesToFloat(data), width, height);
+        }
+
+        public float[] DecodeFloats(byte[] data, uint width, uint height)
+        {
+            float[] output = new float[width * height * 4];
 
             var bitsPerPixel = (uint)(11 + 11 + 10);
             uint bytesPerPixel = (bitsPerPixel + 7) / 8;
@@ -38,10 +43,10 @@ namespace ImageLibrary.Formats.Encoders
 
                     var rgb = Unpack(pixelData);
 
-                    output[pixelIndex + 0] = (byte)(Math.Clamp(rgb.X, 0, 1) * 255);
-                    output[pixelIndex + 1] = (byte)(Math.Clamp(rgb.Y, 0, 1) * 255);
-                    output[pixelIndex + 2] = (byte)(Math.Clamp(rgb.Z, 0, 1) * 255);
-                    output[pixelIndex + 3] = 255;
+                    output[pixelIndex + 0] = rgb.X;
+                    output[pixelIndex + 1] = rgb.Y;
+                    output[pixelIndex + 2] = rgb.Z;
+                    output[pixelIndex + 3] = 1f;
 
                     pixelIndex += 4;
                 }
@@ -49,7 +54,7 @@ namespace ImageLibrary.Formats.Encoders
             return output;
         }
 
-        public byte[] Encode(byte[] data, uint width, uint height)
+        public byte[] EncodeFloats(float[] data, uint width, uint height)
         {
             var bitsPerPixel = (uint)(11 + 11 + 10);
             uint bytesPerPixel = (bitsPerPixel + 7) / 8;
@@ -62,9 +67,9 @@ namespace ImageLibrary.Formats.Encoders
             {
                 for (uint x = 0; x < width; x++)
                 {
-                    float r = data[pixelIndex + 0] / 255f;
-                    float g = data[pixelIndex + 1] / 255f;
-                    float b = data[pixelIndex + 2] / 255f;
+                    float r = data[pixelIndex + 0];
+                    float g = data[pixelIndex + 1];
+                    float b = data[pixelIndex + 2];
 
                     var rgb = Pack(r, g, b);
 

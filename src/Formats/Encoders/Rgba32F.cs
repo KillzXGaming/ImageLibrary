@@ -7,16 +7,16 @@ namespace ImageLibrary.Formats.Encoders
     /// <summary>
     /// An rgba encoder/decoder.
     /// </summary>
-    public class Rgba16F : ImageEncoder, IImageEncoderFloat
+    public class Rgba32F : ImageEncoder, IImageEncoderFloat
     {
         public uint BitsPerPixel => BytesPerPixel * 8;
         public uint BlockWidth => 1;
         public uint BlockHeight => 1;
         public uint BlockDepth => 1;
-        public uint BytesPerPixel => GetChannelCount(Channels) * 2;
+        public uint BytesPerPixel => GetChannelCount(Channels) * 4;
         public ChannelLayout Channels { get; }
 
-        public Rgba16F(ChannelLayout channels)
+        public Rgba32F(ChannelLayout channels)
         {
             this.Channels = channels;
         }
@@ -24,14 +24,15 @@ namespace ImageLibrary.Formats.Encoders
         public uint CalculateSize(uint width, uint height)
             => width * height * BytesPerPixel;
 
-        public byte[] Decode(byte[] data, uint width, uint height)
+        public byte[] Decode(byte[] data, uint width, uint height) 
         {
-            return ByteUtil.ConvertFloatToBytes(DecodeFloats(data, width, height));
+            float[] pixels = DecodeFloats(data, width, height);
+            return pixels.Select(x => ByteUtil.ConvertToByte(x)).ToArray();
         }
 
-        public byte[] Encode(byte[] data, uint width, uint height)
+        public byte[] Encode(byte[] data, uint width, uint height) 
         {
-            return EncodeFloats(ByteUtil.ConvertBytesToFloat(data), width, height);
+            return EncodeFloats(data.Select(x => (float)x / 255.0f).ToArray(), width, height);
         }
 
         public float[] DecodeFloats(byte[] data, uint width, uint height)
@@ -42,16 +43,16 @@ namespace ImageLibrary.Formats.Encoders
             var channelCount = (int)GetChannelCount(this.Channels);
             float[] output = new float[width * height * 4];
 
-            var srcU16 = MemoryMarshal.Cast<byte, ushort>(data);
+            var srcFloats = MemoryMarshal.Cast<byte, float>(data);
             int srcIndex = 0;
             int dstIndex = 0;
 
             for (int i = 0; i < width * height; i++)
             {
-                output[dstIndex + 0] = channelCount >= 1 ? (float)BitConverter.UInt16BitsToHalf(srcU16[srcIndex]) : 0f;
-                output[dstIndex + 1] = channelCount >= 2 ? (float)BitConverter.UInt16BitsToHalf(srcU16[srcIndex + 1]) : 0f;
-                output[dstIndex + 2] = channelCount >= 3 ? (float)BitConverter.UInt16BitsToHalf(srcU16[srcIndex + 2]) : 0f;
-                output[dstIndex + 3] = channelCount >= 4 ? (float)BitConverter.UInt16BitsToHalf(srcU16[srcIndex + 3]) : 1f;
+                output[dstIndex + 0] = channelCount >= 1 ? (float)srcFloats[srcIndex] : 0f;
+                output[dstIndex + 1] = channelCount >= 2 ? (float)srcFloats[srcIndex + 1] : 0f;
+                output[dstIndex + 2] = channelCount >= 3 ? (float)srcFloats[srcIndex + 2] : 0f;
+                output[dstIndex + 3] = channelCount >= 4 ? (float)srcFloats[srcIndex + 3] : 1f;
 
                 srcIndex += (int)channelCount;
                 dstIndex += 4;
@@ -63,23 +64,18 @@ namespace ImageLibrary.Formats.Encoders
         public byte[] EncodeFloats(float[] data, uint width, uint height)
         {
             byte[] output = new byte[CalculateSize(width, height)];
-            var dstU16 = MemoryMarshal.Cast<byte, ushort>(output);
+            var dstFloats = MemoryMarshal.Cast<byte, float>(output);
+
             var channelCount = (int)GetChannelCount(this.Channels);
 
             int srcIndex = 0;
             int dstIndex = 0;
-
             for (int i = 0; i < width * height; i++)
             {
-                float r = data[srcIndex + 0];
-                float g = data[srcIndex + 1];
-                float b = data[srcIndex + 2];
-                float a = data[srcIndex + 3];
-
-                if (channelCount >= 1) dstU16[dstIndex + 0] = BitConverter.HalfToUInt16Bits((Half)r);
-                if (channelCount >= 2) dstU16[dstIndex + 1] = BitConverter.HalfToUInt16Bits((Half)g);
-                if (channelCount >= 3) dstU16[dstIndex + 2] = BitConverter.HalfToUInt16Bits((Half)b);
-                if (channelCount >= 4) dstU16[dstIndex + 3] = BitConverter.HalfToUInt16Bits((Half)a);
+                if (channelCount >= 1) dstFloats[dstIndex + 0] = data[srcIndex + 0];
+                if (channelCount >= 2) dstFloats[dstIndex + 1] = data[srcIndex + 1];
+                if (channelCount >= 3) dstFloats[dstIndex + 2] = data[srcIndex + 2];
+                if (channelCount >= 4) dstFloats[dstIndex + 3] = data[srcIndex + 3];
 
                 srcIndex += 4;
                 dstIndex += (int)channelCount;
@@ -92,6 +88,7 @@ namespace ImageLibrary.Formats.Encoders
         {
             ChannelLayout.R => 1u,
             ChannelLayout.RG => 2u,
+            ChannelLayout.RGB => 3u,
             ChannelLayout.RGBA => 4u,
             _ => throw new NotSupportedException($"Unsupported channel layout {layout}")
         };

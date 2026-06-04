@@ -1,15 +1,10 @@
 ﻿using ImageLibrary.Interfaces;
-using SixLabors.ImageSharp.ColorSpaces;
-using System;
+using ImageLibrary.Utils;
 using System.Buffers.Binary;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ImageLibrary.Formats.Encoders
 {
-    internal class RGB9E5 : ImageEncoder
+    internal class RGB9E5 : ImageEncoder, IImageEncoderFloat
     {
         public uint BitsPerPixel => 32;
 
@@ -19,8 +14,18 @@ namespace ImageLibrary.Formats.Encoders
 
         public byte[] Decode(byte[] data, uint width, uint height)
         {
+            return ByteUtil.ConvertFloatToBytes(DecodeFloats(data, width, height));
+        }
+
+        public byte[] Encode(byte[] data, uint width, uint height)
+        {
+            return EncodeFloats(ByteUtil.ConvertBytesToFloat(data), width, height);
+        }
+
+        public float[] DecodeFloats(byte[] data, uint width, uint height)
+        {
             var pixelCount = width * height;
-            var output = new byte[pixelCount * 4];
+            var output = new float[pixelCount * 4];
 
             int pixelIndex = 0;
             for (int i = 0; i < pixelCount; i++)
@@ -33,30 +38,26 @@ namespace ImageLibrary.Formats.Encoders
 
                 float scale = MathF.Pow(2f, e - 24);
 
-                float rf = r * scale;
-                float gf = g * scale;
-                float bf = b * scale;
-
-                output[pixelIndex + 0] = (byte)(Math.Clamp(rf, 0, 1) * 255);
-                output[pixelIndex + 1] = (byte)(Math.Clamp(gf, 0, 1) * 255);
-                output[pixelIndex + 2] = (byte)(Math.Clamp(bf, 0, 1) * 255);
-                output[pixelIndex + 3] = 255;
+                output[pixelIndex + 0] = r * scale;
+                output[pixelIndex + 1] = g * scale;
+                output[pixelIndex + 2] = b * scale;
+                output[pixelIndex + 3] = 1f;
 
                 pixelIndex += 4;
             }
             return output;
         }
 
-        public byte[] Encode(byte[] data, uint width, uint height)
+        public byte[] EncodeFloats(float[] data, uint width, uint height)
         {
             var pixelCount = width * height;
             var result = new byte[pixelCount * 4];
 
             for (int i = 0; i < pixelCount; i++)
             {
-                float r = BitConverter.ToSingle(data, i * 12 + 0);
-                float g = BitConverter.ToSingle(data, i * 12 + 4);
-                float b = BitConverter.ToSingle(data, i * 12 + 8);
+                float r = data[i * 4 + 0];
+                float g = data[i * 4 + 1];
+                float b = data[i * 4 + 2];
 
                 float maxRGB = MathF.Max(r, MathF.Max(g, b));
                 if (maxRGB < 1e-6f)

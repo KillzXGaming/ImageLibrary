@@ -23,6 +23,7 @@ namespace ImageLibrary
     {
         R,
         RG,
+        RGB,
         RGBA
     }
 }

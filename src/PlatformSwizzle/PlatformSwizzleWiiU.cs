@@ -189,7 +189,7 @@ namespace ImageLibrary.PlatformSwizzle
             surf.tileMode = (uint)TileMode;
             surf.swizzle = SwizzleValue;
 
-            return GX2.Decode(surf, 0, 0);
+            return GX2.Decode(surf, -1, -1);
         }
 
         public override byte[] SwizzleAllSurfaces(GenericTextureBase texture, byte[] imageData)
@@ -201,7 +201,7 @@ namespace ImageLibrary.PlatformSwizzle
                 (uint)AAMode,
                 texture.Width,
                 texture.Height,
-                texture.Depth,
+                texture.ArrayCount * texture.Depth,
                 (uint)GX2Format,
                 SwizzleValue,
                 (uint)SurfaceDimension,

@@ -8,6 +8,20 @@ namespace ImageLibrary.Utils
 {
     public class ByteUtil
     {
+        public static float[] ConvertBytesToFloat(byte[] bytes)
+        {
+            return bytes.Select(x => (float)(x / 255.0f)).ToArray();
+        }
+        public static byte[] ConvertFloatToBytes(float[] bytes)
+        {
+            return bytes.Select(x => ByteUtil.ConvertToByte(x)).ToArray();
+        }
+
+        public static byte ConvertToByte(float v)
+        {
+            return (byte)(Math.Clamp(v, 0f, 1f) * 255);
+        }
+
         /// <summary>
         /// Combines an array of byte[] into a singular byte[]
         /// </summary>

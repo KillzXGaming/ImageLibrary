@@ -16,7 +16,6 @@ namespace ImageLibrary.Formats.Encoders
         public bool IsSigned = false;
         public bool IsLuminance = false;
         public bool IsSRGB = false;
-        public bool IsFloat = false;
 
         public bool BitOrderReversed = false;
 
@@ -111,12 +110,6 @@ namespace ImageLibrary.Formats.Encoders
                     uint mask = (1u << bitCount) - 1;
                     uint v = (pixelData >> bitOffset) & mask;
 
-                    if (IsFloat)
-                    {
-                        var f32 = (float)BitConverter.UInt16BitsToHalf((ushort)v);
-                        f32 = Math.Clamp(f32, 0.0f, 1.0f);
-                        return (byte)(f32 * 255);
-                    }
                     return (byte)((v * 255u + 32767u) / 65535u);
                 }
                 else if (bitCount == 32)
