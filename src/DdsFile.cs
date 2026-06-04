@@ -231,6 +231,38 @@ namespace ImageLibrary
             DXGI_FORMAT_V408 = 132,
             DXGI_FORMAT_SAMPLER_FEEDBACK_MIN_MIP_OPAQUE,
             DXGI_FORMAT_SAMPLER_FEEDBACK_MIP_REGION_USED_OPAQUE,
+
+            // Nvidia texture tools extended
+            // Todo more formats
+            DXGI_FORMAT_ASTC_4x4_UNORM = 134,
+            DXGI_FORMAT_ASTC_4x4_SRGB = 135,
+            DXGI_FORMAT_ASTC_5x4_UNORM = 138,
+            DXGI_FORMAT_ASTC_5x4_SRGB = 139,
+            DXGI_FORMAT_ASTC_5x5_UNORM = 142,
+            DXGI_FORMAT_ASTC_5x5_SRGB = 143,
+            DXGI_FORMAT_ASTC_6x5_UNORM = 146,
+            DXGI_FORMAT_ASTC_6x5_SRGB = 147,
+            DXGI_FORMAT_ASTC_6x6_UNORM = 150,
+            DXGI_FORMAT_ASTC_6x6_SRGB = 151,
+            DXGI_FORMAT_ASTC_8x5_UNORM = 154,
+            DXGI_FORMAT_ASTC_8x5_SRGB = 155,
+            DXGI_FORMAT_ASTC_8x6_UNORM = 158,
+            DXGI_FORMAT_ASTC_8x6_SRGB = 159,
+            DXGI_FORMAT_ASTC_8x8_UNORM = 162,
+            DXGI_FORMAT_ASTC_8x8_SRGB = 163,
+            DXGI_FORMAT_ASTC_10x5_UNORM = 166,
+            DXGI_FORMAT_ASTC_10x5_SRGB = 167,
+            DXGI_FORMAT_ASTC_10x6_UNORM = 170,
+            DXGI_FORMAT_ASTC_10x6_SRGB = 171,
+            DXGI_FORMAT_ASTC_10x8_UNORM = 174,
+            DXGI_FORMAT_ASTC_10x8_SRGB = 175,
+            DXGI_FORMAT_ASTC_10x10_UNORM = 178,
+            DXGI_FORMAT_ASTC_10x10_SRGB = 179,
+            DXGI_FORMAT_ASTC_12x10_UNORM = 182,
+            DXGI_FORMAT_ASTC_12x10_SRGB = 183,
+            DXGI_FORMAT_ASTC_12x12_UNORM = 186,
+            DXGI_FORMAT_ASTC_12x12_SRGB = 187,
+
             DXGI_FORMAT_FORCE_UINT = -1,
         };
 
@@ -311,6 +343,17 @@ namespace ImageLibrary
         }
 
         #endregion
+
+        public static List<IImageFormat> GetSupportedImageFormats()
+        {
+            List<IImageFormat> supportedFormats = new List<IImageFormat>();
+            foreach (DXGI_FORMAT format in Enum.GetValues(typeof(DXGI_FORMAT)))
+            {
+                if (ImageFormat.IsEncoderSupported(format))
+                    supportedFormats.Add(new ImageFormat(format));
+            }
+            return supportedFormats;
+        }
 
         public DXGI_FORMAT Format = DXGI_FORMAT.DXGI_FORMAT_R8G8B8A8_UNORM;
 
@@ -398,14 +441,14 @@ namespace ImageLibrary
 
         public void FromGeneric(GenericTextureBase genericTexture)
         {
+            this.MainHeader.PitchOrLinearSize = (uint)genericTexture.Data.Length / Math.Max(genericTexture.ArrayCount, 1);
             this.MainHeader.Width = genericTexture.Width;
             this.MainHeader.Height = genericTexture.Height;
-          //  this.MainHeader.Depth = genericTexture.Depth;
+            this.MainHeader.Depth = genericTexture.Depth;
             this.MainHeader.MipCount = genericTexture.MipCount;
-          //  this.Dx10Header.ArrayCount = genericTexture.ArrayCount;
+            this.Dx10Header.ArrayCount = genericTexture.ArrayCount;
             this.ImageData = genericTexture.Data.ToArray();
-
-          // this.SetFlags(genericTexture.ImageFormat.GetDDSFormat(), false, genericTexture.IsCubemap);
+            this.SetFlags(genericTexture.ImageFormat.GetDDSFormat(), false, genericTexture.IsCubemap);
         }
 
         public GenericTextureBase ToGeneric()

@@ -13,4 +13,12 @@ namespace ImageLibrary
     {
         GenericTextureBase Texture { get; }
     }
+
+    /// <summary>
+    /// Represents a format for getting supported formats.
+    /// </summary>
+    public interface ISupportedImageFormats
+    {
+        List<IImageFormat> SupportedFormats { get; }
+    }
 }
