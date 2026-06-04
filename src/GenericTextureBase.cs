@@ -252,6 +252,10 @@ namespace ImageLibrary
             this.ArrayCount = 1;
             this.MipCount = (uint)settings.MipCount;
 
+            // Toggle for generating the highest valid mip count based on image format.
+            if (settings.AutomateMipmaps)
+                this.MipCount = this.ImageFormat.CalculateMipCount(this.Width, this.Height);
+
             if (settings.FlipVertical)
                 image.Mutate(x => x.Flip(FlipMode.Vertical));
 
@@ -322,6 +326,36 @@ namespace ImageLibrary
             this.PlatformSwizzle.SwizzleSlices(this, slices);
         }
 
+
+        /// <summary>
+        /// Imports an existing generic texture.
+        /// Returns false if file is not supported or fails.
+        /// </summary>
+        /// <param name="dds"></param>
+        public virtual bool Import(GenericTextureBase textureBase)
+        {
+            if (!this.IsFormatSupported(textureBase.ImageFormat))
+                return false;
+
+            this.Width = textureBase.Width;
+            this.Height = textureBase.Height;
+            this.Depth = textureBase.Depth;
+            this.ArrayCount = textureBase.ArrayCount;
+            this.MipCount = textureBase.MipCount;
+            this.Type = textureBase.Type;
+            this.ImageFormat = textureBase.ImageFormat;
+            // Reswizzle if needed
+            if (textureBase.PlatformSwizzle != this.PlatformSwizzle)
+            {
+                var deswizzle = textureBase.PlatformSwizzle.DeswizzleAllSurfaces(textureBase);
+                this.Data = this.PlatformSwizzle.SwizzleAllSurfaces(this, deswizzle);
+            }
+            else
+                this.Data = textureBase.Data;
+
+            return true;
+        }
+
         /// <summary>
         /// Imports a DDS image.
         /// Returns false if file is not supported or fails.
@@ -329,8 +363,8 @@ namespace ImageLibrary
         /// <param name="dds"></param>
         public bool Import(DdsFile dds)
         {
-            if (!this.IsFormatSupported(dds.Format))
-                return false;
+          //  if (!this.IsFormatSupported(dds.Format))
+            //    return false;
 
             this.Width = dds.MainHeader.Width;
             this.Height = dds.MainHeader.Height;
@@ -385,6 +419,33 @@ namespace ImageLibrary
             this.Data = swizzle;
 
             return true;
+        }
+
+        /// <summary>
+        /// Re-encodes the image format.
+        /// </summary>
+        /// <param name="format"></param>
+        public void Reencode(IImageFormat format)
+        {
+            List<byte[]> bytes = new();
+            for (int a = 0; a < this.ArrayCount; a++)
+            {
+                for (int m = 0; m < this.MipCount; m++)
+                {
+                    var mipWidth = Math.Max(this.Width >> m, 1);
+                    var mipHeight = Math.Max(this.Height >> m, 1);
+
+                    // Todo decode back as float if supported
+                    byte[] deswizzle = this.PlatformSwizzle.Deswizzle(this, a, m);
+                    var decoded = this.ImageFormat.Decode(deswizzle, mipWidth, mipHeight);
+
+                    // Now encode back the mip level
+                    var encoded = format.Encode(decoded.Data, decoded.Width, decoded.Height);
+                    bytes.Add(encoded);
+                }
+            }
+            this.Data = this.PlatformSwizzle.SwizzleAllSurfaces(this, ByteUtil.CombineByteArray(bytes.ToArray()));
+            this.ImageFormat = format;
         }
 
         public List<Mipmap> GetMipmaps()
@@ -615,6 +676,15 @@ namespace ImageLibrary
         /// <returns></returns>
         public bool IsFormatSupported(IImageFormat format) {
             return this.SupportedFormats.Any(x => x.ToString() == format.ToString());  
+        }
+
+        public static List<IImageFormat> GetFormats(IEnumerable<TextureFormat> formats)
+        {
+            List<IImageFormat> list = new();
+            foreach (var format in formats)
+                if (ImageLibrary.ImageFormat.IsEncoderSupported(format))
+                    list.Add(new ImageFormat(format));
+            return list;
         }
 
         public class OutputRgba

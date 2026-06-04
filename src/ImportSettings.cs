@@ -11,6 +11,7 @@ namespace ImageLibrary
         public bool FlipVertical = false;
 
         public int MipCount = 1;
+        public bool AutomateMipmaps = false;
         public bool CrossCubemap = false;
     }
 }
