@@ -219,15 +219,18 @@ namespace ImageLibrary
             // Float formats
             { TextureFormat.RG11B10_FLOAT,  new R11G11B10() },
 
-            { TextureFormat.R32_FLOAT,     new Rgba(32) { IsFloat = true } },
-            { TextureFormat.R16_FLOAT,     new Rgba(16) { IsFloat = true } },
-            { TextureFormat.RG16_FLOAT,     new Rgba(16, 16) { IsFloat = true } },
-            { TextureFormat.RGBA32_FLOAT,     new Rgba(32,32,32,32) { IsFloat = true } },
+            { TextureFormat.R32_FLOAT,     new Rgba32F( ChannelLayout.R) },
+            { TextureFormat.RG32_FLOAT,     new Rgba32F( ChannelLayout.RG) },
+            { TextureFormat.RGB32_FLOAT,     new Rgba32F( ChannelLayout.RGB) },
+            { TextureFormat.RGBA32_FLOAT,     new Rgba32F( ChannelLayout.RGBA) },
+
             { TextureFormat.R16_UNORM,     new Rgba(16) { ChannelOrder = "RRR" } },
             { TextureFormat.RG16_UNORM,      new Rgba(16,16) },
             { TextureFormat.RGBA16_UNORM,      new Rgba(16,16,16,16) },
 
-            { TextureFormat.RGBA16_FLOAT,     new Rgba16F()},
+            { TextureFormat.RGBA16_FLOAT, new Rgba16F(ChannelLayout.RGBA) },
+            { TextureFormat.RG16_FLOAT,   new Rgba16F(ChannelLayout.RG) },
+            { TextureFormat.R16_FLOAT,    new Rgba16F(ChannelLayout.R) },
 
             { TextureFormat.D32_FLOAT,  new Rgba(32) },
 
