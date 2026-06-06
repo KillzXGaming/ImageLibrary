@@ -35,13 +35,15 @@ namespace ImageLibrary.Utils
         {
             List<byte[]> surfaces = new List<byte[]>();
 
-            int faceWidth = image.Width / 4;
-            int faceHeight = image.Height / 3;
+            int faceWidth = Math.Max(image.Width / 4, 1);
+            int faceHeight = Math.Max(image.Height / 3, 1);
 
             void SetSurface(int x, int y)
             {
                 var face = image.Clone();
-                face.Mutate(c => c.Crop(new Rectangle(x, y, faceWidth, faceHeight)));
+                // Don't resize if too small
+                if (face.Width != 1 && face.Height != 1)
+                    face.Mutate(c => c.Crop(new Rectangle(x, y, faceWidth, faceHeight)));
 
                 surfaces.Add(face.GetSourceInBytes());
                 face.Dispose();
@@ -76,8 +78,8 @@ namespace ImageLibrary.Utils
             if (surfaces.Count != 6)
                 throw new Exception($"Invalid surface count {surfaces.Count}! Expected 6.");
 
-            var width = faceWidth * 4;
-            var height = faceHeight * 3;
+            var width = Math.Max(faceWidth * 4, 1);
+            var height = Math.Max(faceHeight * 3, 1); 
             var buffer = new byte[width * height * 4];
 
             var image = Image.LoadPixelData<Rgba32>(buffer, width, height);
