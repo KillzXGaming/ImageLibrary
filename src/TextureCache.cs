@@ -22,5 +22,16 @@ namespace ImageLibrary
         /// This must be added manually if desired to be used.
         /// </summary>
         public static Dictionary<string, Image<Rgba32>> TextureIcons = new Dictionary<string, Image<Rgba32>>();
+
+        /// <summary>
+        /// Reloads the cache based on any updated texture names.
+        /// </summary>
+        public static void ReloadCache()
+        {
+            var textures = Textures.Values.ToList();
+            Textures.Clear();
+            foreach (var tex in textures)
+                Textures.TryAdd(tex.Name, tex);
+        }
     }
 }

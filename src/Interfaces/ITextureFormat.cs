@@ -19,6 +19,6 @@ namespace ImageLibrary
     /// </summary>
     public interface ISupportedImageFormats
     {
-        List<IImageFormat> SupportedFormats { get; }
+        IEnumerable<IImageFormat> SupportedFormats { get; }
     }
 }

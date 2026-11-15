@@ -166,37 +166,45 @@ namespace ImageLibrary.Formats.Encoders.Gcn
         {
             stream.ByteOrder = ByteOrder.BigEndian;
 
-            //4 bpp, 8 block width/4 block height, block size 32 bytes, possible palettes (IA8, RGB565, RGB5A3)
-            uint numBlocksW = (width + 7) / 8;
-            uint numBlocksH = (height + 3) / 4;
+            uint numBlocksW = (width + 3u) / 4u;
+            uint numBlocksH = (height + 3u) / 4u;
 
-            byte[] decodedData = new byte[width * height * 8];
+            ushort[] indices = new ushort[width * height];
 
             //Read the indexes from the file
             for (int yBlock = 0; yBlock < numBlocksH; yBlock++)
             {
                 for (int xBlock = 0; xBlock < numBlocksW; xBlock++)
                 {
-                    //Inner Loop for pixels
                     for (int pY = 0; pY < 4; pY++)
                     {
-                        for (int pX = 0; pX < 8; pX++)
-                        {
-                            if (xBlock * 8 + pX >= width || yBlock * 4 + pY >= height)
-                            {
-                                stream.Seek(1, SeekOrigin.Current);
-                                continue;
-                            }
+                        int srcY = yBlock * 4 + pY;
 
-                            byte data = stream.ReadByte();
-                            decodedData[width * (yBlock * 4 + pY) + xBlock * 8 + pX] = data;
+                        for (int pX = 0; pX < 4; pX++)
+                        {
+                            int srcX = xBlock * 4 + pX;
+
+                            if (srcY < height && srcX < width)
+                            {
+                                byte low = stream.ReadByte();
+                                byte high = stream.ReadByte();
+
+                                ushort index = (ushort)(low | ((high & 0x3F) << 8));
+                                indices[srcY * width + srcX] = index;
+                            }
+                            else
+                            {
+                                // Skip padding bytes
+                                stream.Seek(2, SeekOrigin.Current);
+                            }
                         }
                     }
                 }
             }
 
             //Now look them up in the palette and turn them into actual colors.
-            byte[] finalDest = new byte[decodedData.Length / 2];
+            int bytesPerPixel = (paletteFormat == GcnPaletteFormats.IA8) ? 2 : 4;
+            byte[] finalDest = new byte[width * height * bytesPerPixel];
 
             int pixelSize = paletteFormat == GcnPaletteFormats.IA8 ? 2 : 4;
             int destOffset = 0;
@@ -204,8 +212,9 @@ namespace ImageLibrary.Formats.Encoders.Gcn
             {
                 for (int x = 0; x < width; x++)
                 {
-                    UnpackPixelFromPalette(decodedData[y * width + x], ref finalDest, destOffset, imagePalette.GetBytes(), paletteFormat);
-                    destOffset += pixelSize;
+                    ushort palIndex = indices[y * width + x];
+                    UnpackPixelFromPalette(palIndex, ref finalDest, destOffset, imagePalette.GetBytes(), paletteFormat);
+                    destOffset += bytesPerPixel;
                 }
             }
 
@@ -214,35 +223,65 @@ namespace ImageLibrary.Formats.Encoders.Gcn
 
         public static Tuple<byte[], ushort[]> EncodeC4(GcnPaletteFormats PaletteFormat, byte[] m_rgbaImageData, List<ushort> rawColorData, int Width, int Height)
         {
-            List<Color32> palColors = new List<Color32>();
+            uint numBlocksW = (uint)((Width + 7) / 8);
+            uint numBlocksH = (uint)((Height + 7) / 8);
 
-            uint numBlocksW = (uint)Width / 8;
-            uint numBlocksH = (uint)Height / 8;
+            int paddedWidth = (int)(numBlocksW * 8);
+            int paddedHeight = (int)(numBlocksH * 8);
 
-            byte[] pixIndices = new byte[numBlocksH * numBlocksW * 8 * 8];
+            byte[] pixIndices = new byte[numBlocksH * numBlocksW * 32];
 
+            List<Color32> palColors = new List<Color32>(Width * Height);
             for (int i = 0; i < Width * Height * 4; i += 4)
-                palColors.Add(new Color32(m_rgbaImageData[i + 2], m_rgbaImageData[i + 1], m_rgbaImageData[i + 0], m_rgbaImageData[i + 3]));
+            {
+                palColors.Add(new Color32(
+                    m_rgbaImageData[i + 0],
+                    m_rgbaImageData[i + 1],
+                    m_rgbaImageData[i + 2],
+                    m_rgbaImageData[i + 3]));
+            }
 
             Dictionary<Color32, byte> pixelColorIndexes = new Dictionary<Color32, byte>();
             foreach (Color32 col in palColors)
             {
-                EncodeColor(PaletteFormat, col, rawColorData, pixelColorIndexes);
+                if (!pixelColorIndexes.ContainsKey(col))
+                    EncodeColor(PaletteFormat, col, rawColorData, pixelColorIndexes);
             }
 
             int pixIndex = 0;
+
             for (int yBlock = 0; yBlock < numBlocksH; yBlock++)
             {
                 for (int xBlock = 0; xBlock < numBlocksW; xBlock++)
                 {
                     for (int pY = 0; pY < 8; pY++)
                     {
+                        int srcY = yBlock * 8 + pY;
+
                         for (int pX = 0; pX < 8; pX += 2)
                         {
-                            byte color1 = (byte)(pixelColorIndexes[palColors[Width * (yBlock * 8 + pY) + xBlock * 8 + pX]] & 0xF);
-                            byte color2 = (byte)(pixelColorIndexes[palColors[Width * (yBlock * 8 + pY) + xBlock * 8 + pX + 1]] & 0xF);
-                            pixIndices[pixIndex] = (byte)(color1 << 4);
-                            pixIndices[pixIndex++] |= color2;
+                            int srcX1 = xBlock * 8 + pX;
+                            int srcX2 = srcX1 + 1;
+
+                            byte idx1, idx2;
+
+                            if (srcY < Height && srcX1 < Width)
+                            {
+                                int srcIdx = srcY * Width + srcX1;
+                                idx1 = (byte)(pixelColorIndexes[palColors[srcIdx]] & 0xF);
+                            }
+                            else
+                                idx1 = 0; // padding
+
+                            if (srcY < Height && srcX2 < Width)
+                            {
+                                int srcIdx = srcY * Width + srcX2;
+                                idx2 = (byte)(pixelColorIndexes[palColors[srcIdx]] & 0xF);
+                            }
+                            else
+                                idx2 = 0; // padding
+
+                            pixIndices[pixIndex++] = (byte)((idx1 << 4) | idx2);
                         }
                     }
                 }
@@ -257,10 +296,13 @@ namespace ImageLibrary.Formats.Encoders.Gcn
             uint numBlocksW = (uint)(Width + 7) / 8;
             uint numBlocksH = (uint)(Height + 3) / 4;
 
-            byte[] pixIndices = new byte[numBlocksH * numBlocksW * 8 * 4];
+            int paddedWidth = (int)(numBlocksW * 8);
+            int paddedHeight = (int)(numBlocksH * 4);
+
+            byte[] pixIndices = new byte[paddedWidth * paddedHeight];
 
             for (int i = 0; i < (Width * Height) * 4; i += 4)
-                palColors.Add(new Color32(m_rgbaImageData[i + 2], m_rgbaImageData[i + 1], m_rgbaImageData[i + 0], m_rgbaImageData[i + 3]));
+                palColors.Add(new Color32(m_rgbaImageData[i + 0], m_rgbaImageData[i + 1], m_rgbaImageData[i + 2], m_rgbaImageData[i + 3]));
 
             Dictionary<Color32, byte> pixelColorIndexes = new Dictionary<Color32, byte>();
             foreach (Color32 col in palColors)
@@ -281,16 +323,17 @@ namespace ImageLibrary.Formats.Encoders.Gcn
                         for (int pX = 0; pX < 8; pX++)
                         {
                             int srcX = xBlock * 8 + pX;
-                            bool xInside = srcX < Width; 
 
                             byte paletteIdx;
-                            if (yInside && xInside)
+                            if (srcY < Height && srcX < Width)
                             {
-                                int idx = srcY * Width + srcX;
-                                paletteIdx = pixelColorIndexes[palColors[idx]];
+                                int srcIdx = srcY * Width + srcX;
+                                paletteIdx = pixelColorIndexes[palColors[srcIdx]];
                             }
                             else
-                                              paletteIdx = 0;
+                            {
+                                paletteIdx = 0;
+                            }
 
                             pixIndices[pixIndex++] = paletteIdx;
                         }
@@ -303,41 +346,59 @@ namespace ImageLibrary.Formats.Encoders.Gcn
 
         public static Tuple<byte[], ushort[]> EncodeC14(GcnPaletteFormats PaletteFormat, byte[] m_rgbaImageData, List<ushort> rawColorData, int Width, int Height)
         {
-            List<Color32> palColors = new List<Color32>();
+            uint numBlocksW = (uint)((Width + 3) / 4);
+            uint numBlocksH = (uint)((Height + 3) / 4);
 
-            uint numBlocksW = (uint)Width / 4;
-            uint numBlocksH = (uint)Height / 4;
+            byte[] pixIndices = new byte[numBlocksH * numBlocksW * 32];
 
-            byte[] pixIndices = new byte[numBlocksH * numBlocksW * 4 * 4];
-
+            List<Color32> palColors = new List<Color32>(Width * Height);
             for (int i = 0; i < Width * Height * 4; i += 4)
-                palColors.Add(new Color32(m_rgbaImageData[i + 2], m_rgbaImageData[i + 1], m_rgbaImageData[i + 0], m_rgbaImageData[i + 3]));
+            {
+                palColors.Add(new Color32(
+                    m_rgbaImageData[i + 0],
+                    m_rgbaImageData[i + 1],
+                    m_rgbaImageData[i + 2],
+                    m_rgbaImageData[i + 3]));
+            }
 
             Dictionary<Color32, ushort> pixelColorIndexes = new Dictionary<Color32, ushort>();
             foreach (Color32 col in palColors)
             {
-                EncodeColor(PaletteFormat, col, rawColorData, pixelColorIndexes);
+                if (!pixelColorIndexes.ContainsKey(col))
+                    EncodeColor(PaletteFormat, col, rawColorData, pixelColorIndexes);
             }
 
             int pixIndex = 0;
+
             for (int yBlock = 0; yBlock < numBlocksH; yBlock++)
             {
                 for (int xBlock = 0; xBlock < numBlocksW; xBlock++)
                 {
                     for (int pY = 0; pY < 4; pY++)
                     {
+                        int srcY = yBlock * 4 + pY;
+
                         for (int pX = 0; pX < 4; pX++)
                         {
-                            ushort index = pixelColorIndexes[palColors[Width * (yBlock * 4 + pY) + xBlock * 4 + pX]];
-                            // Mask to 14 bits 
-                            var pixel = (ushort)(index & 0x3FFF);
+                            int srcX = xBlock * 4 + pX;
 
-                            pixIndices[pixIndex++] = (byte)(index & 0xFF); // Low byte
-                            pixIndices[pixIndex++] = (byte)((index >> 8) & 0x3F); // High 6 bits, upper 2 bits are padding (0)
+                            ushort index;
+                            if (srcY < Height && srcX < Width)
+                            {
+                                int srcIdx = srcY * Width + srcX;
+                                index = pixelColorIndexes[palColors[srcIdx]];
+                            }
+                            else
+                                index = 0;
+
+                            // 14-bit index: low byte + 6 bits from high byte
+                            pixIndices[pixIndex++] = (byte)(index & 0xFF);           // Low 8 bits
+                            pixIndices[pixIndex++] = (byte)((index >> 8) & 0x3F);   // High 6 bits
                         }
                     }
                 }
             }
+
             return new Tuple<byte[], ushort[]>(pixIndices, rawColorData.ToArray());
         }
 
@@ -487,9 +548,9 @@ namespace ImageLibrary.Formats.Encoders.Gcn
             g = (byte)(g << 8 - 6 | g >> 12 - 8);
             b = (byte)(b << 8 - 5 | b >> 10 - 8);
 
-            dest[destOffset] = b;
+            dest[destOffset] = r;
             dest[destOffset + 1] = g;
-            dest[destOffset + 2] = r;
+            dest[destOffset + 2] = b;
             dest[destOffset + 3] = 0xFF; //Set alpha to 1
         }
 

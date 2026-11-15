@@ -18,12 +18,6 @@ namespace ImageLibrary.Formats.Encoders
 
         public static unsafe byte[] Decode(byte[] input, uint width, uint height, ImageFormat format)
         {
-            //pad out the image data to the expected aligned width/height
-            input = ImageToMultiple4(input, (int)width, (int)height);
-
-            width = (uint)((int)width + 3 & ~3);  // Align width to the next multiple of 4
-            height = (uint)((int)height + 3 & ~3); // Align height to the next multiple of 4
-
             nint decodedDataPtr = nint.Zero;
             ulong decodedLen;
 

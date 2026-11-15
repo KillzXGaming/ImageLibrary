@@ -43,7 +43,7 @@ namespace ImageLibrary
         /// Gets the raw encoder. Always rgba8.
         /// </summary>
         /// <returns></returns>
-        public ImageEncoder GetEncoder() => new Rgba(8, 8, 8, 8);
+        public ImageEncoder GetEncoder() => new Rgba(EncoderType.Unorm, 8, 8, 8, 8);
 
         public ImageFormatDS(NitroTexFormat format)
         {

@@ -274,18 +274,18 @@ namespace ImageLibrary
 
         static Dictionary<PICATextureFormat, ImageEncoder> Encoders = new Dictionary<PICATextureFormat, ImageEncoder>()
         {
-            { PICATextureFormat.RGBA8, new Rgba(8, 8, 8, 8) },
-            { PICATextureFormat.RGB8, new Rgba(8, 8, 8) },
-            { PICATextureFormat.RGB565, new Rgba(5, 6, 5) },
-            { PICATextureFormat.RGBA5551, new Rgba(5, 5, 5, 1) },
-            { PICATextureFormat.RGBA4, new Rgba(4, 4, 4, 4) },
+            { PICATextureFormat.RGBA8, new Rgba(EncoderType.Unorm, 8, 8, 8, 8) },
+            { PICATextureFormat.RGB8, new Rgba(EncoderType.Unorm, 8, 8, 8) },
+            { PICATextureFormat.RGB565, new Rgba(EncoderType.Unorm, 5, 6, 5) },
+            { PICATextureFormat.RGBA5551, new Rgba(EncoderType.Unorm, 5, 5, 5, 1) },
+            { PICATextureFormat.RGBA4, new Rgba(EncoderType.Unorm, 4, 4, 4, 4) },
             { PICATextureFormat.A8, new ImageLibrary.Formats.Encoders.A8() },
             { PICATextureFormat.A4, new A4() },
             { PICATextureFormat.L8, new  ImageLibrary.Formats.Encoders.L8() },
             { PICATextureFormat.L4, new L4() },
             { PICATextureFormat.LA8, new LA8() },
             { PICATextureFormat.LA4, new LA4() },
-            { PICATextureFormat.HiLo8, new Rgba(8, 8) },
+            { PICATextureFormat.HiLo8, new Rgba(EncoderType.Unorm, 8, 8) },
             { PICATextureFormat.ETC1, new Etc1(false) },
             { PICATextureFormat.ETC1A4, new Etc1(true) },
         };

@@ -23,21 +23,26 @@ namespace ImageLibrary.Formats.Encoders
         public uint BlockHeight { get; } = 4;
         public uint BlockDepth { get; } = 1;
 
-        public bool IsSRGB = false;
+        public EncoderType EncoderType = EncoderType.Unorm;
         public bool IsAlpha = false;
 
         public bool UseBc1Alpha = true;
-        public bool IsSnorm = false;
 
         private bool IsSingleBlock =>
             Format == BcnFormats.BC1 ||
             Format == BcnFormats.BC4 ||
             Format == BcnFormats.BC4S;
 
-        public Bcn(BcnFormats format, bool isSrgb = false)
+        public Bcn(BcnFormats format, EncoderType type = EncoderType.Unorm)
         {
-            Format = format;
-            IsSRGB = isSrgb;
+            EncoderType = type;
+
+            if (type == EncoderType.Snorm && format == BcnFormats.BC5)
+                Format = BcnFormats.BC5S;
+            else if (type == EncoderType.Snorm && format == BcnFormats.BC4)
+                Format = BcnFormats.BC4S;
+            else
+                Format = format;
         }
 
         public uint CalculateSize(uint width, uint height)
@@ -51,6 +56,25 @@ namespace ImageLibrary.Formats.Encoders
 
         public byte[] Decode(byte[] input, uint width, uint height)
         {
+            if (ImageDds.IsSupported())
+            {
+                var quality = (ImageDds.Quality)QualityLevel;
+                ImageDds.ImageFormat format = ImageDds.ImageFormat.Rgba8Unorm;
+                switch (Format)
+                {
+                    case BcnFormats.BC1: format = ImageDds.ImageFormat.BC1RgbaUnorm; break;
+                    case BcnFormats.BC3: format = ImageDds.ImageFormat.BC3RgbaUnorm; break;
+                    case BcnFormats.BC4: format = ImageDds.ImageFormat.BC4RUnorm; break;
+                    case BcnFormats.BC4S: format = ImageDds.ImageFormat.BC4RSnorm; break;
+                    case BcnFormats.BC5: format = ImageDds.ImageFormat.BC5RgUnorm; break;
+                    case BcnFormats.BC6: format = ImageDds.ImageFormat.BC6hRgbUfloat; break;
+                    case BcnFormats.BC6S: format = ImageDds.ImageFormat.BC6hRgbSfloat; break;
+                    case BcnFormats.BC7: format = ImageDds.ImageFormat.BC7RgbaUnorm; break;
+                }
+                if (format != ImageDds.ImageFormat.Rgba8Unorm)
+                    return ImageDds.Decode(input, width, height, format);
+            }
+
             BcDecoder decoder = new BcDecoder();
             decoder.InputOptions.DdsBc1ExpectAlpha = UseBc1Alpha;
             CompressionFormat compressionFormat = CompressionFormat.Bc1;
@@ -186,7 +210,7 @@ namespace ImageLibrary.Formats.Encoders
             return colors[0];
         }
 
-        public override string ToString() => this.Format.ToString();
+        public override string ToString() => $"{this.Format}_{this.EncoderType}";
     }
 
     public enum BcnFormats

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -26,7 +27,7 @@ namespace ImageLibrary
         /// Determines to use component channels on export.
         /// </summary>
         public bool UseComponentChannels { get; set; } = true;
-
+        public Vector2 Resize { get; set; } = Vector2.Zero;
         public TextureChannelType ChannelType { get; set; } = TextureChannelType.RGBA;
     }
 }

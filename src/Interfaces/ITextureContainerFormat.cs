@@ -12,5 +12,6 @@ namespace ImageLibrary
     public interface ITextureContainerFormat
     {
         IEnumerable<GenericTextureBase> GetTextures();
+        object GetProperties() => null;
     }
 }

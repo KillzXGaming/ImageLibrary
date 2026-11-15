@@ -8,7 +8,7 @@ namespace ImageLibrary.Interfaces
 {
     public interface ITextureContainerAddRemove
     {
-        GenericTextureBase CreateNew();
+        GenericTextureBase CreateNewTexture();
         void AddTexture(GenericTextureBase textureBase);
         void RemoveTexture(GenericTextureBase textureBase);
         void ClearTextures();

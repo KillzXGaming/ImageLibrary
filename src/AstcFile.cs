@@ -50,6 +50,7 @@ namespace ImageLibrary
         /// </summary>
         public byte[] DataBlock;
 
+        public AstcFile() { }
         public AstcFile(Astc encoder, uint width, uint height, uint depth, byte[] data)
         {
             BlockDimX = (byte)encoder.BlockWidth;
@@ -129,6 +130,17 @@ namespace ImageLibrary
         public Astc GetEncoder()
         {
             return new Astc(GetFormat());
+        }
+
+        public static List<IImageFormat> GetSupportedImageFormats()
+        {
+            List<IImageFormat> formats = new();
+            foreach (Astc.AstcFormat format in Enum.GetValues(typeof(Astc.AstcFormat)))
+            {
+                formats.Add(new ImageFormat(new Astc(format)));
+                formats.Add(new ImageFormat(new Astc(format, EncoderType.Srgb)));
+            }
+            return formats;
         }
     }
 }

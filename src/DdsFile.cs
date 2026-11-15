@@ -492,6 +492,9 @@ namespace ImageLibrary
                 GreenComponent = TextureChannelType.Green,
                 BlueComponent = TextureChannelType.Blue,
                 AlphaComponent = TextureChannelType.Alpha,
+                SupportsCubemaps = true,
+                CanRename = false,
+                CanReplace = true,
             };
         }
 
@@ -533,7 +536,16 @@ namespace ImageLibrary
 
             ConvertDXGIFormatToFlags(format);
 
-            if (IsDX10 || ForceDX10)
+            bool isSrgb = Format == DXGI_FORMAT.DXGI_FORMAT_BC1_UNORM_SRGB ||
+                            Format == DXGI_FORMAT.DXGI_FORMAT_BC3_UNORM_SRGB ||
+                            Format == DXGI_FORMAT.DXGI_FORMAT_BC4_SNORM ||
+                            Format == DXGI_FORMAT.DXGI_FORMAT_BC5_SNORM ||
+                            Format == DXGI_FORMAT.DXGI_FORMAT_BC7_UNORM_SRGB ||
+                            Format == DXGI_FORMAT.DXGI_FORMAT_R8G8B8A8_UNORM_SRGB ||
+                            Format == DXGI_FORMAT.DXGI_FORMAT_B8G8R8A8_UNORM_SRGB ||
+                            Format == DXGI_FORMAT.DXGI_FORMAT_B8G8R8X8_UNORM_SRGB;
+
+            if (IsDX10 || ForceDX10 || isSrgb)
             {
                 PfHeader.Flags = (uint)DDPF.FOURCC;
                 PfHeader.FourCC = FOURCC_DX10;

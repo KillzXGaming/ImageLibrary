@@ -13,6 +13,7 @@ using System.IO;
 using System.Text;
 using static ImageLibrary.WiiU.GX2;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Numerics;
 
 namespace ImageLibrary
 {
@@ -166,6 +167,22 @@ namespace ImageLibrary
         /// </summary>
         public bool CanReplace = true;
 
+        /// <summary>
+        /// Determines if the editor should support cross cubemap images in GUI settings.
+        /// </summary>
+        public bool SupportsCubemaps = false;
+
+        /// <summary>
+        /// Total possible mip count for the texture.
+        /// Clamps mip counter for both auto generation and GUI.
+        /// </summary>
+        public int MaxMipCount = 16;
+
+        /// <summary>
+        /// User view model for loading extra properties for the texture.
+        /// </summary>
+        public object UserViewModel { get; set; }
+
         public GenericTextureBase()
         {
             this.PropertiesObject = new PropertyDisplay(this); 
@@ -219,16 +236,13 @@ namespace ImageLibrary
             return SizeUtil.GetFileSize(this.Data.Length);
         }
 
-        public virtual bool IsCustomImport(string path)
-            => path.EndsWith(".dds") || path.EndsWith(".dds2") || path.EndsWith(".astc");
-
         /// <summary>
         /// Imports a file based on the file extension.
         /// </summary>
         /// <param name="filePath"></param>
         public virtual void Import(string filePath, ImportSettings settings = null)
         {
-            if (filePath.EndsWith(".dds"))
+            if (filePath.EndsWith(".dds") || filePath.EndsWith(".dds2"))
                 Import(new DdsFile(filePath));
             else if (filePath.EndsWith(".astc"))
                 Import(new AstcFile(filePath));
@@ -532,6 +546,9 @@ namespace ImageLibrary
         {
             settings ??= new ExportSettings();
 
+            // Clamp
+            settings.MipLevel = Math.Max(Math.Min(settings.MipLevel, (int)MipCount - 1), 0);
+
             var w = PlatformSwizzle.GetSwizzleWidth(this.Width);
             var h = PlatformSwizzle.GetSwizzleHeight(this.Height);
 
@@ -629,7 +646,7 @@ namespace ImageLibrary
             }
             else
             {
-                if (this.Depth > 1 || this.ArrayCount > 1)
+                if ((this.Depth > 1 || this.ArrayCount > 1) && !settings.CrossImageCubemap)
                 {
                     string ext = Path.GetExtension(path);
                     for (int i = 0; i < this.ArrayCount; i++)
@@ -642,6 +659,12 @@ namespace ImageLibrary
                 else
                 {
                     var image = this.ToImage(settings);
+                    if (settings.Resize != Vector2.Zero)
+                        image.Mutate(x => x.Resize(new ResizeOptions
+                        {
+                            Size = new Size((int)settings.Resize.X, (int)settings.Resize.Y),
+                            Mode = ResizeMode.Max
+                        }));
                     image.Save(path);
                 }
             }

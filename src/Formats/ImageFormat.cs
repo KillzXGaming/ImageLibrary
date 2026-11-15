@@ -179,60 +179,59 @@ namespace ImageLibrary
             return 1;
         }
 
-
         static Dictionary<TextureFormat, ImageEncoder> Encoders = new Dictionary<TextureFormat, ImageEncoder>()
         {
             { TextureFormat.RGB9E5_SHAREDEXP, new RGB9E5() },
             
-            { TextureFormat.RGBA8_UNORM, new Rgba(8, 8, 8, 8) },
-            { TextureFormat.RGBA8_SRGB,  new Rgba(8, 8, 8, 8) },
-            { TextureFormat.RG8_UNORM,   new Rgba(8, 8) },
+            { TextureFormat.RGBA8_UNORM, new Rgba(EncoderType.Unorm, 8, 8, 8, 8) },
+            { TextureFormat.RGBA8_SRGB,  new Rgba(EncoderType.Srgb, 8, 8, 8, 8) },
+            { TextureFormat.RG8_UNORM,   new Rgba(EncoderType.Unorm, 8, 8) },
             { TextureFormat.A8_UNORM,    new A8() },
             { TextureFormat.R8_UNORM,    new L8() },
 
-            { TextureFormat.RGBA4_UNORM,   new Rgba(4, 4, 4, 4) },
-            { TextureFormat.R4_UNORM,      new Rgba(4) },
-            { TextureFormat.RG4_UNORM,      new Rgba(4, 4) },
+            { TextureFormat.RGBA4_UNORM,   new Rgba(EncoderType.Unorm, 4, 4, 4, 4) },
+            { TextureFormat.R4_UNORM,      new Rgba(EncoderType.Unorm, 4) },
+            { TextureFormat.RG4_UNORM,      new Rgba(EncoderType.Unorm, 4, 4) },
 
-            { TextureFormat.RGB565_UNORM,  new Rgba(5, 6, 5) },
-            { TextureFormat.RGB5A1_UNORM,  new Rgba(5, 5, 5, 1) },
+            { TextureFormat.RGB565_UNORM,  new Rgba(EncoderType.Unorm, 5, 6, 5) },
+            { TextureFormat.RGB5A1_UNORM,  new Rgba(EncoderType.Unorm, 5, 5, 5, 1) },
 
-            { TextureFormat.BGR565_UNORM,  new Rgba(5, 6, 5) { ChannelOrder = "BGR" } },
-            { TextureFormat.BGR5A1_UNORM,  new Rgba(5, 5, 5, 1) { ChannelOrder = "BGRA" } },
-            { TextureFormat.BGRA4_UNORM,   new Rgba(4, 4, 4, 4) { ChannelOrder = "BGRA" } },
-            { TextureFormat.BGRA8_UNORM,   new Rgba(8, 8, 8, 8) { ChannelOrder = "BGRA" } },
-            { TextureFormat.BGRA8_SRGB,    new Rgba(8, 8, 8, 8) { ChannelOrder = "BGRA" } },
+            { TextureFormat.BGR565_UNORM,  new Rgba(EncoderType.Unorm, 5, 6, 5) { ChannelOrder = "BGR" } },
+            { TextureFormat.BGR5A1_UNORM,  new Rgba(EncoderType.Unorm, 5, 5, 5, 1) { ChannelOrder = "BGRA" } },
+            { TextureFormat.BGRA4_UNORM,   new Rgba(EncoderType.Unorm, 4, 4, 4, 4) { ChannelOrder = "BGRA" } },
+            { TextureFormat.BGRA8_UNORM,   new Rgba(EncoderType.Unorm, 8, 8, 8, 8) { ChannelOrder = "BGRA" } },
+            { TextureFormat.BGRA8_SRGB,    new Rgba(EncoderType.Unorm, 8, 8, 8, 8) { ChannelOrder = "BGRA" } },
 
             { TextureFormat.RGBB10A2_UNORM,    new R10B10G10A2() },
 
-            { TextureFormat.D16_UNORM,  new Rgba(16) },
+            { TextureFormat.D16_UNORM,  new Rgba(EncoderType.Unorm, 16) },
 
             // Signed formats
-            { TextureFormat.R8_SNORM,       new Rgba(8) { IsSigned = true } },
-            { TextureFormat.RG8_SNORM,      new Rgba(8, 8) { IsSigned = true } },
-            { TextureFormat.RGBA8_SNORM,    new Rgba(8, 8, 8, 8) { IsSigned = true } },
+            { TextureFormat.R8_SNORM,       new Rgba(EncoderType.Snorm, 8)},
+            { TextureFormat.RG8_SNORM,      new Rgba(EncoderType.Snorm,8, 8) },
+            { TextureFormat.RGBA8_SNORM,    new Rgba(EncoderType.Snorm,8, 8, 8, 8)  },
 
-            { TextureFormat.R16_SNORM,       new Rgba(16) { IsSigned = true } },
-            { TextureFormat.RG16_SNORM,      new Rgba(16) { IsSigned = true } },
-            { TextureFormat.RGBA16_SNORM,    new Rgba(16) { IsSigned = true } },
+            { TextureFormat.R16_SNORM,       new Rgba(EncoderType.Snorm,16)  },
+            { TextureFormat.RG16_SNORM,      new Rgba(EncoderType.Snorm,16,16)  },
+            { TextureFormat.RGBA16_SNORM,    new Rgba(EncoderType.Snorm,16,16,16,16)  },
 
             // Float formats
             { TextureFormat.RG11B10_FLOAT,  new R11G11B10() },
 
-            { TextureFormat.R32_FLOAT,     new Rgba32F( ChannelLayout.R) },
-            { TextureFormat.RG32_FLOAT,     new Rgba32F( ChannelLayout.RG) },
-            { TextureFormat.RGB32_FLOAT,     new Rgba32F( ChannelLayout.RGB) },
-            { TextureFormat.RGBA32_FLOAT,     new Rgba32F( ChannelLayout.RGBA) },
+            { TextureFormat.R32_FLOAT,     new Rgba32F(ChannelLayout.R) },
+            { TextureFormat.RG32_FLOAT,     new Rgba32F(ChannelLayout.RG) },
+            { TextureFormat.RGB32_FLOAT,     new Rgba32F(ChannelLayout.RGB) },
+            { TextureFormat.RGBA32_FLOAT,     new Rgba32F(ChannelLayout.RGBA) },
 
-            { TextureFormat.R16_UNORM,     new Rgba(16) { ChannelOrder = "RRR" } },
-            { TextureFormat.RG16_UNORM,      new Rgba(16,16) },
-            { TextureFormat.RGBA16_UNORM,      new Rgba(16,16,16,16) },
+            { TextureFormat.R16_UNORM,     new Rgba(EncoderType.Unorm, 16) { ChannelOrder = "RRR" } },
+            { TextureFormat.RG16_UNORM,      new Rgba(EncoderType.Unorm, 16,16) },
+            { TextureFormat.RGBA16_UNORM,      new Rgba(EncoderType.Unorm, 16,16,16,16) },
 
             { TextureFormat.RGBA16_FLOAT, new Rgba16F(ChannelLayout.RGBA) },
             { TextureFormat.RG16_FLOAT,   new Rgba16F(ChannelLayout.RG) },
             { TextureFormat.R16_FLOAT,    new Rgba16F(ChannelLayout.R) },
 
-            { TextureFormat.D32_FLOAT,  new Rgba(32) },
+            { TextureFormat.D32_FLOAT,  new Rgba32F(ChannelLayout.R) },
 
             // Compressed
             { TextureFormat.BC1_UNORM,  new Bcn(BcnFormats.BC1) },
@@ -265,20 +264,20 @@ namespace ImageLibrary
             { TextureFormat.ASTC_12x10_UNORM,   new Astc(Astc.AstcFormat.ASTC_12x10) },
             { TextureFormat.ASTC_12x12_UNORM,   new Astc(Astc.AstcFormat.ASTC_12x12) },
 
-            { TextureFormat.ASTC_4x4_SRGB,     new Astc(Astc.AstcFormat.ASTC_4x4) },
-            { TextureFormat.ASTC_5x4_SRGB,     new Astc(Astc.AstcFormat.ASTC_5x4) },
-            { TextureFormat.ASTC_5x5_SRGB,     new Astc(Astc.AstcFormat.ASTC_5x5) },
-            { TextureFormat.ASTC_6x5_SRGB,     new Astc(Astc.AstcFormat.ASTC_6x5) },
-            { TextureFormat.ASTC_6x6_SRGB,     new Astc(Astc.AstcFormat.ASTC_6x6) },
-            { TextureFormat.ASTC_8x5_SRGB,     new Astc(Astc.AstcFormat.ASTC_8x5) },
-            { TextureFormat.ASTC_8x6_SRGB,     new Astc(Astc.AstcFormat.ASTC_8x6) },
-            { TextureFormat.ASTC_8x8_SRGB,     new Astc(Astc.AstcFormat.ASTC_8x8) },
-            { TextureFormat.ASTC_10x5_SRGB,    new Astc(Astc.AstcFormat.ASTC_10x5) },
-            { TextureFormat.ASTC_10x6_SRGB,    new Astc(Astc.AstcFormat.ASTC_10x6) },
-            { TextureFormat.ASTC_10x8_SRGB,    new Astc(Astc.AstcFormat.ASTC_10x8) },
-            { TextureFormat.ASTC_10x10_SRGB,   new Astc(Astc.AstcFormat.ASTC_10x10) },
-            { TextureFormat.ASTC_12x10_SRGB,   new Astc(Astc.AstcFormat.ASTC_12x10) },
-            { TextureFormat.ASTC_12x12_SRGB,   new Astc(Astc.AstcFormat.ASTC_12x12) },
+            { TextureFormat.ASTC_4x4_SRGB,     new Astc(Astc.AstcFormat.ASTC_4x4, EncoderType.Srgb) },
+            { TextureFormat.ASTC_5x4_SRGB,     new Astc(Astc.AstcFormat.ASTC_5x4, EncoderType.Srgb) },
+            { TextureFormat.ASTC_5x5_SRGB,     new Astc(Astc.AstcFormat.ASTC_5x5, EncoderType.Srgb) },
+            { TextureFormat.ASTC_6x5_SRGB,     new Astc(Astc.AstcFormat.ASTC_6x5, EncoderType.Srgb) },
+            { TextureFormat.ASTC_6x6_SRGB,     new Astc(Astc.AstcFormat.ASTC_6x6, EncoderType.Srgb) },
+            { TextureFormat.ASTC_8x5_SRGB,     new Astc(Astc.AstcFormat.ASTC_8x5, EncoderType.Srgb) },
+            { TextureFormat.ASTC_8x6_SRGB,     new Astc(Astc.AstcFormat.ASTC_8x6, EncoderType.Srgb) },
+            { TextureFormat.ASTC_8x8_SRGB,     new Astc(Astc.AstcFormat.ASTC_8x8, EncoderType.Srgb) },
+            { TextureFormat.ASTC_10x5_SRGB,    new Astc(Astc.AstcFormat.ASTC_10x5, EncoderType.Srgb) },
+            { TextureFormat.ASTC_10x6_SRGB,    new Astc(Astc.AstcFormat.ASTC_10x6, EncoderType.Srgb) },
+            { TextureFormat.ASTC_10x8_SRGB,    new Astc(Astc.AstcFormat.ASTC_10x8, EncoderType.Srgb) },
+            { TextureFormat.ASTC_10x10_SRGB,   new Astc(Astc.AstcFormat.ASTC_10x10, EncoderType.Srgb) },
+            { TextureFormat.ASTC_12x10_SRGB,   new Astc(Astc.AstcFormat.ASTC_12x10, EncoderType.Srgb) },
+            { TextureFormat.ASTC_12x12_SRGB,   new Astc(Astc.AstcFormat.ASTC_12x12, EncoderType.Srgb) },
         };
     }
 }

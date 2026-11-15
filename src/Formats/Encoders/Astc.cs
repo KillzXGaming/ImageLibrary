@@ -1,6 +1,4 @@
-﻿using AstcEncoder;
-using BCnEncoder.Shared;
-using ImageLibrary.Helpers;
+﻿using ImageLibrary.Helpers;
 using ImageLibrary.Interfaces;
 using Ryujinx.Graphics.Gal.Texture;
 using SixLabors.ImageSharp;
@@ -26,19 +24,20 @@ namespace ImageLibrary.Formats.Encoders
         public uint BlockDepth { get; } = 1;
         public uint BytesPerPixel => 16;
 
-        public bool IsSRGB;
+        public EncoderType EncoderType;
 
-        public Astc(uint x, uint y, bool isSrgb = false)
+        public Astc(uint x, uint y, EncoderType type = EncoderType.Unorm)
         {
             Format = Enum.Parse<AstcFormat>($"ASTC_{x}x{y}");
             BlockWidth = x;
             BlockHeight = y;
-            IsSRGB = isSrgb;
+            EncoderType = type;
         }
 
-        public Astc(AstcFormat format, bool isSrgb = false)
+        public Astc(AstcFormat format, EncoderType type = EncoderType.Unorm)
         {
             Format = format;
+            EncoderType = type;
 
             // Use Regex to find block width/height/depth by format name
             MatchCollection matches = Regex.Matches(format.ToString(), @"\d+");
@@ -60,79 +59,30 @@ namespace ImageLibrary.Formats.Encoders
 
         public byte[] Decode(byte[] data, uint width, uint height)
         {
-            // Do one time check
-            if (!AstcEncHelper.IsValid)
-                return ASTCDecoder.DecodeToRGBA8888(data,
-                  (int)BlockWidth, (int)BlockHeight, (int)BlockDepth, (int)width, (int)height, 1);
+            // Check for other codecs that may be faster
+            if (ImageCodecs.TryGetCodec(this, out IImageCodec codec))
+                return codec.Decode(this, data, width, height);
 
-            AstcencSwizzle swizzle = new AstcencSwizzle()
-            {
-                r = AstcencSwz.AstcencSwzR,
-                g = AstcencSwz.AstcencSwzG,
-                b = AstcencSwz.AstcencSwzB,
-                a = AstcencSwz.AstcencSwzA
-            };
-            AstcencError status = Astcenc.AstcencConfigInit(AstcencProfile.AstcencPrfLdr, 
-                BlockWidth, BlockHeight, BlockDepth, Astcenc.AstcencPreMedium, 0, out AstcencConfig config);
-            
-            AstcencContext context;
-            status = Astcenc.AstcencContextAlloc(ref config, 1, out context);
-
-            byte[] output = new byte[width * height * 4];
-
-            AstcencImage outImage;
-            outImage.dimX = width;
-            outImage.dimY = height;
-            outImage.dimZ = 1;
-            outImage.dataType = AstcencType.AstcencTypeU8;
-            outImage.data = output;
-            status = Astcenc.AstcencDecompressImage(context, data, ref outImage, swizzle, 0);
-
-            Astcenc.AstcencContextFree(context);
-
-            return output;
+            return ASTCDecoder.DecodeToRGBA8888(data,
+                     (int)BlockWidth, (int)BlockHeight, (int)BlockDepth, (int)width, (int)height, 1);
         }
 
         public byte[] Encode(byte[] data, uint width, uint height)
         {
+            if (ImageCodecs.TryGetCodec(this, out IImageCodec codec))
+                return codec.Encode(this, data, width, height);
+
             uint block_count_x = ((uint)width + BlockWidth - 1) / BlockWidth;
             uint block_count_y = ((uint)height + BlockHeight - 1) / BlockHeight;
 
             uint compLen = block_count_x * block_count_y * 16;
             byte[] comp_data = new byte[compLen];
-            // Output as empty for now
-            // Todo the encoder should include a progress argument with an option to cancel/have errors.
-            if (!AstcEncHelper.IsValid)
-                return comp_data;
-
-            uint thread_count = 1;
-
-            AstcencSwizzle swizzle = new AstcencSwizzle()
-            {
-                r = AstcencSwz.AstcencSwzR,
-                g = AstcencSwz.AstcencSwzG,
-                b = AstcencSwz.AstcencSwzB,
-                a = AstcencSwz.AstcencSwzA
-            };
-
-            AstcencError status = Astcenc.AstcencConfigInit(AstcencProfile.AstcencPrfLdr,
-                BlockWidth, BlockHeight, BlockDepth, Astcenc.AstcencPreMedium, 0, out AstcencConfig config);
-
-            AstcencContext context;
-            status = Astcenc.AstcencContextAlloc(ref config, thread_count, out context);
-
-
-            AstcencImage outImage;
-            outImage.dimX = width;
-            outImage.dimY = height;
-            outImage.dimZ = 1;
-            outImage.dataType = AstcencType.AstcencTypeU8;
-            outImage.data = data;
-            status = Astcenc.AstcencCompressImage(context, ref outImage, swizzle, comp_data, 0);
-
-            Astcenc.AstcencContextFree(context);
-
             return comp_data;
+        }
+
+        public override string ToString()
+        {
+            return $"{this.Format}_{this.EncoderType}";
         }
 
         public enum AstcFormat

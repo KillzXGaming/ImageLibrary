@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SixLabors.ImageSharp;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -37,6 +38,28 @@ namespace ImageLibrary.Utils
                 }
             }
             return ByteUtil.CombineByteArray(surfaces.ToArray());
+        }
+
+        public static byte[] GetSlice(Span<byte> data, uint width, uint height, IImageFormat format,
+            int arrayCount, int mipCount, int arrayLevel, int mipLevel)
+        {
+            // Deswizzling between platforms will only get the specified surface/mip levels
+            int ofs = 0;
+            for (int a = 0; a < arrayCount; a++)
+            {
+                for (int m = 0; m < mipCount; m++)
+                {
+                    uint w = Math.Max(1, width >> m);
+                    uint h = Math.Max(1, height >> m);
+                    var size = format.GetSize(w, h);
+
+                    if (mipLevel == m && arrayLevel == a)
+                        return data.Slice(ofs, data.Length - ofs).ToArray();
+
+                    ofs += (int)size;
+                }
+            }
+            return data.ToArray();
         }
 
         /// <summary>
@@ -117,16 +140,21 @@ namespace ImageLibrary.Utils
 
         public static byte[] EncodeMipmaps(GenericTextureBase imageInfo, TextureSurface[] surfaces)
         {
+            return EncodeMipmaps(imageInfo.ImageFormat, imageInfo.Width, imageInfo.Height, surfaces);
+        }
+
+        public static byte[] EncodeMipmaps(IImageFormat format, uint width, uint height, TextureSurface[] surfaces)
+        {
             List<byte[]> mipmaps = new List<byte[]>();
             for (int arrayLevel = 0; arrayLevel < surfaces.Length; arrayLevel++)
             {
                 for (int mipLevel = 0; mipLevel < surfaces[arrayLevel].Mipmaps.Count; mipLevel++)
                 {
-                    uint mipWidth = Math.Max(1, imageInfo.Width >> mipLevel);
-                    uint mipHeight = Math.Max(1, imageInfo.Height >> mipLevel);
+                    uint mipWidth = Math.Max(1, width >> mipLevel);
+                    uint mipHeight = Math.Max(1, height >> mipLevel);
                     var mipMap = surfaces[arrayLevel].Mipmaps[mipLevel];
 
-                    var mip_encoded = imageInfo.ImageFormat.Encode(mipMap, mipWidth, mipHeight);
+                    var mip_encoded = format.Encode(mipMap, mipWidth, mipHeight);
                     mipmaps.Add(mip_encoded);
                 }
             }

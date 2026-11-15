@@ -13,9 +13,9 @@ namespace ImageLibrary.Formats.Encoders
     /// </summary>
     public class Rgba : ImageEncoder
     {
-        public bool IsSigned = false;
+        public EncoderType EncoderType = EncoderType.Unorm;
+
         public bool IsLuminance = false;
-        public bool IsSRGB = false;
 
         public bool BitOrderReversed = false;
 
@@ -31,8 +31,9 @@ namespace ImageLibrary.Formats.Encoders
         public byte B;
         public byte A;
 
-        public Rgba(byte r, byte g = 0, byte b = 0, byte a = 0)
+        public Rgba(EncoderType type, byte r, byte g = 0, byte b = 0, byte a = 0)
         {
+            this.EncoderType = type;
             R = r;
             G = g;
             B = b;
@@ -126,7 +127,7 @@ namespace ImageLibrary.Formats.Encoders
                 uint mask = (uint)((1 << bitCount) - 1);
                 uint channelData = pixelData >> bitOffset & mask;
 
-                if (IsSigned)
+                if (EncoderType == EncoderType.Snorm)
                 {
                     // Handle signed conversion
                     int maxPositiveValue = (1 << bitCount - 1) - 1; // Max positive value for signed int
@@ -195,7 +196,7 @@ namespace ImageLibrary.Formats.Encoders
         {
             if (bitCount == 0) return 0; // No bits for this channel
 
-            if (IsSigned)
+            if (EncoderType == EncoderType.Snorm)
             {
                 int maxPositiveValue = (1 << bitCount - 1) - 1; // Max positive value for signed int
                 int signedValue = value * (2 * maxPositiveValue) / 255 - maxPositiveValue;
@@ -227,7 +228,7 @@ namespace ImageLibrary.Formats.Encoders
             if (B != 0) text += B;
             if (A != 0) text += A;
 
-            return text;
+            return $"{text}_{this.EncoderType}";
         }
 
         private byte GetChannel(byte[] input, int pixelIndex, int channelIndex)

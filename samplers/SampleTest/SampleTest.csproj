@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AstcEncoderCSharp" Version="5.4.3" />
+    <PackageReference Include="AstcEncoderCSharp" />
   </ItemGroup>
 
   <ItemGroup>

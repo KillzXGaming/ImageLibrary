@@ -52,6 +52,8 @@ namespace ImageLibrary.PlatformSwizzle
         /// <returns></returns>
         public virtual byte[] Deswizzle(GenericTextureBase imageInfo, int arrayLevel, int mipLevel)
         {
+            return imageInfo.Data.ToArray();
+
             // Deswizzling between platforms will only get the specified surface/mip levels
             int ofs = 0;
             for (int a = 0; a < imageInfo.ArrayCount; a++)

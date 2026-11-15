@@ -22,7 +22,7 @@ namespace ImageLibrary
     {
         public int PaletteEncodeColorCount = 256;
 
-        public RgbaColor[] GetPaletteColors() => Palette.GetPaletteColors();
+        public RgbaColor[] GetPaletteColors() => Palette?.GetPaletteColors();
 
         public void SetPaletteColor(RgbaColor color, int index)
         {
@@ -53,7 +53,7 @@ namespace ImageLibrary
         /// Gets the raw encoder. Always rgba8.
         /// </summary>
         /// <returns></returns>
-        public ImageEncoder GetEncoder() => new Rgba(8, 8, 8, 8);
+        public ImageEncoder GetEncoder() => new Rgba(EncoderType.Unorm, 8, 8, 8, 8);
 
         public ImageFormatGcn(GcnTextureFormats format)
         {
@@ -112,7 +112,10 @@ namespace ImageLibrary
             {
                 return EncodeWithPalette(data, width, height,
                     this.Format == GcnTextureFormats.C8 ? 
-                    Math.Min(PaletteEncodeColorCount, 256) : 
+                    Math.Min(PaletteEncodeColorCount, 256) :
+
+                    this.Format == GcnTextureFormats.C14X2 ?
+                    Math.Min(PaletteEncodeColorCount, 512) :
                     Math.Min(PaletteEncodeColorCount, 16));
             }
             else
