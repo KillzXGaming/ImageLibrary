@@ -7,11 +7,6 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="CommunityToolkit.HighPerformance" />
-    <PackageReference Include="SixLabors.ImageSharp" />
-  </ItemGroup>
-
     <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
 	    <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
     </PropertyGroup>
@@ -21,6 +16,10 @@
     <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
 	    <DefineConstants>$(DefineConstants);OSX</DefineConstants>
     </PropertyGroup>
+    <ItemGroup>
+      <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.4.2" />
+      <PackageReference Include="SixLabors.ImageSharp" Version="3.2.0" />
+    </ItemGroup>
     <ItemGroup>
       <Reference Include="BCnEncoder">
         <HintPath>..\external\BCnEncoder.dll</HintPath>
